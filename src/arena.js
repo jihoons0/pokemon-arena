@@ -4,6 +4,11 @@ const PIXEL_WIDTH = 640;
 const PIXEL_HEIGHT = 360;
 
 let terrainCache = null;
+let landscape = null;
+if(typeof Image!=='undefined'){
+  const image=new Image();image.onload=()=>{landscape=image;terrainCache=null;};
+  image.src='/assets/arena/mt-silver-dawn.webp';
+}
 
 const COLORS = {
   skyTop: '#8d9ca8',
@@ -293,71 +298,6 @@ function drawBorderScenery(ctx) {
   polygon(ctx, [[0, 302], [25, 294], [50, 300], [79, 293], [108, 304], [144, 298], [177, 309], [214, 302], [251, 313], [286, 306], [323, 315], [360, 306], [398, 313], [436, 302], [474, 310], [512, 299], [550, 305], [586, 295], [615, 301], [640, 293], [640, 301], [615, 309], [586, 303], [550, 313], [512, 307], [474, 318], [436, 310], [398, 321], [360, 314], [323, 323], [286, 314], [251, 321], [214, 310], [177, 317], [144, 306], [108, 312], [79, 301], [50, 308], [25, 302], [0, 310]], COLORS.snowLight);
 }
 
-function drawTrainerRed(ctx, x, y) {
-  ctx.save();
-  ctx.translate(Math.round(x), Math.round(y));
-  ctx.fillStyle = 'rgba(53,66,70,0.28)';
-  ctx.fillRect(-6, 8, 13, 3);
-  ctx.fillStyle = '#27353d';
-  ctx.fillRect(-4, 3, 3, 7);
-  ctx.fillRect(2, 3, 3, 7);
-  ctx.fillStyle = '#d9dcda';
-  ctx.fillRect(-5, -7, 10, 11);
-  ctx.fillStyle = '#aeb8b8';
-  ctx.fillRect(-5, 1, 10, 3);
-  ctx.fillStyle = '#292d33';
-  ctx.fillRect(-6, -6, 2, 7);
-  ctx.fillRect(5, -6, 2, 7);
-  ctx.fillStyle = '#e5b298';
-  ctx.fillRect(-4, -13, 8, 6);
-  ctx.fillStyle = '#272b31';
-  ctx.fillRect(-4, -14, 8, 3);
-  ctx.fillRect(3, -12, 2, 3);
-  ctx.fillStyle = '#bd2631';
-  ctx.fillRect(-6, -17, 10, 4);
-  ctx.fillRect(3, -15, 5, 2);
-  ctx.fillStyle = '#f1e8db';
-  ctx.fillRect(-4, -16, 7, 1);
-  ctx.fillStyle = '#9c1f29';
-  ctx.fillRect(-5, -7, 2, 7);
-  ctx.fillRect(4, -7, 2, 7);
-  ctx.fillStyle = '#f2cd33';
-  ctx.fillRect(-6, -4, 1, 2);
-  ctx.fillRect(5, -4, 1, 2);
-  ctx.restore();
-}
-
-function drawTrainerGold(ctx, x, y) {
-  ctx.save();
-  ctx.translate(Math.round(x), Math.round(y));
-  ctx.fillStyle = 'rgba(53,66,70,0.28)';
-  ctx.fillRect(-6, 8, 13, 3);
-  ctx.fillStyle = '#253746';
-  ctx.fillRect(-4, 3, 3, 7);
-  ctx.fillRect(2, 3, 3, 7);
-  ctx.fillStyle = '#dfb53d';
-  ctx.fillRect(-5, -7, 10, 11);
-  ctx.fillStyle = '#ede3c8';
-  ctx.fillRect(-3, -6, 6, 7);
-  ctx.fillStyle = '#1d2c38';
-  ctx.fillRect(-6, -6, 2, 7);
-  ctx.fillRect(5, -6, 2, 7);
-  ctx.fillStyle = '#e2ad8e';
-  ctx.fillRect(-4, -13, 8, 6);
-  ctx.fillStyle = '#5b3528';
-  ctx.fillRect(-4, -14, 8, 3);
-  ctx.fillRect(-5, -12, 2, 4);
-  ctx.fillStyle = '#d93331';
-  ctx.fillRect(-6, -17, 11, 3);
-  ctx.fillRect(-1, -15, 7, 2);
-  ctx.fillStyle = '#f1e8d5';
-  ctx.fillRect(-5, -16, 5, 1);
-  ctx.fillStyle = '#312e3c';
-  ctx.fillRect(-5, -2, 2, 5);
-  ctx.fillRect(4, -2, 2, 5);
-  ctx.restore();
-}
-
 function drawStaticTerrain(ctx) {
   ctx.imageSmoothingEnabled = false;
   const random = rng(0x4d74536c);
@@ -365,8 +305,6 @@ function drawStaticTerrain(ctx) {
   drawBackCliff(ctx, random);
   drawClearing(ctx, random);
   drawBorderScenery(ctx);
-  drawTrainerRed(ctx, 39, 193);
-  drawTrainerGold(ctx, 600, 173);
 
   // Fine atmospheric ice grains over the background, deterministic and sparse.
   scatter(ctx, random, 100, { x: 0, y: 15, w: 640, h: 102 }, ['rgba(239,242,239,0.25)', 'rgba(92,108,113,0.18)'], [1, 1]);
@@ -374,11 +312,13 @@ function drawStaticTerrain(ctx) {
 
 function getTerrainCache() {
   if (terrainCache) return terrainCache;
-  if (typeof OffscreenCanvas === 'undefined') return null;
-  const canvas = new OffscreenCanvas(PIXEL_WIDTH, PIXEL_HEIGHT);
+  if (typeof OffscreenCanvas === 'undefined'&&typeof document==='undefined') return null;
+  const canvas = typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(PIXEL_WIDTH, PIXEL_HEIGHT):document.createElement('canvas');
+  canvas.width=PIXEL_WIDTH;canvas.height=PIXEL_HEIGHT;
   const cacheCtx = canvas.getContext('2d', { alpha: false });
   if (!cacheCtx) return null;
-  drawStaticTerrain(cacheCtx);
+  if(landscape){cacheCtx.imageSmoothingEnabled=true;cacheCtx.drawImage(landscape,0,0,PIXEL_WIDTH,PIXEL_HEIGHT);}
+  else drawStaticTerrain(cacheCtx);
   terrainCache = canvas;
   return terrainCache;
 }
@@ -417,17 +357,24 @@ export function drawArena(ctx, time = 0, {preserveTransform=false,bounds=null} =
   const cache = getTerrainCache();
   if (bounds) {
     const left=Math.min(-24,bounds.left-24),top=Math.min(-24,bounds.top-24),right=Math.max(LOGICAL_WIDTH+24,bounds.right+24),bottom=Math.max(LOGICAL_HEIGHT+24,bounds.bottom+24);
-    // Extend the scenery for tall phones without stretching the actual battlefield.
+    // Mirror complete edge scenery outside the arena. Stretching a one-pixel
+    // strip produces obvious horizontal streaks when a mobile camera pans out.
     ctx.fillStyle='#c3d0cf';ctx.fillRect(left,top,right-left,bottom-top);
     if(cache){
-      ctx.drawImage(cache,0,0,640,1,0,top,LOGICAL_WIDTH,-top+1);
-      ctx.drawImage(cache,0,359,640,1,0,LOGICAL_HEIGHT-1,LOGICAL_WIDTH,bottom-LOGICAL_HEIGHT+1);
-      ctx.drawImage(cache,0,0,1,360,left,0,-left+1,LOGICAL_HEIGHT);
-      ctx.drawImage(cache,639,0,1,360,LOGICAL_WIDTH-1,0,right-LOGICAL_WIDTH+1,LOGICAL_HEIGHT);
+      for(let row=Math.max(-3,Math.floor(top/LOGICAL_HEIGHT));row<=Math.min(3,Math.floor(bottom/LOGICAL_HEIGHT));row++){
+        for(let col=Math.max(-2,Math.floor(left/LOGICAL_WIDTH));col<=Math.min(2,Math.floor(right/LOGICAL_WIDTH));col++){
+          if(row===0&&col===0)continue;
+          const flipX=Math.abs(col)%2,flipY=Math.abs(row)%2;
+          ctx.save();ctx.translate((col+flipX)*LOGICAL_WIDTH,(row+flipY)*LOGICAL_HEIGHT);ctx.scale(flipX?-1:1,flipY?-1:1);
+          ctx.drawImage(cache,0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);ctx.restore();
+        }
+      }
     }
   }
   if (cache) {
     ctx.drawImage(cache, 0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  } else if(landscape){
+    ctx.drawImage(landscape,0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
   } else {
     ctx.save();
     ctx.scale(2, 2);

@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Battle presentation review</title>
+<style>body{margin:0;max-width:100vw;overflow-x:hidden;background:#112333;color:#f2e9d8;font:14px system-ui}header{padding:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}button,select,input{font:inherit;padding:8px}canvas{display:block;width:min(100%,1280px);margin:auto}output{display:block;overflow-wrap:anywhere;padding:12px;text-align:center}</style>
+<header><strong>Battle presentation review</strong><select id="actor"></select><select id="opponent"></select><select id="element"></select><button id="perf">Measure 18-type effects</button><button id="impact">Impact</button><button id="recall">Faint / recall</button><button id="release">Send out</button><button id="switch">Manual switch</button><label>Time <input id="phase" type="range" min="0" max="1.2" step=".01" value=".3"></label><label><input id="motion" type="checkbox">Reduced motion</label></header>
+<canvas id="scene" width="1280" height="720"></canvas><output id="status">Loading sprites…</output>
+<script type="module">
+import {Battle} from '/src/battle.js';import {Renderer} from '/src/renderer.js';import {ROSTER} from '/src/roster.js';import {loadSprites} from '/src/sprites.js';import {fighterVisualBounds} from '/src/fighter-size.js';import {POKEDEX_HEIGHT_METERS} from '/src/pokedex-sizes.js';
+const $=id=>document.getElementById(id);let action='impact',b,r;
+for(const id of ['actor','opponent'])for(const m of ROSTER)$(id).add(new Option(m.name,m.id));$('actor').value='charizard';$('opponent').value='blastoise';
+for(const element of ['fire','water','electric','ice','grass','ground','psychic','ghost','dragon','poison','steel','fighting','flying','bug','fairy','dark','rock','normal'])$('element').add(new Option(element,element));
+let revision=0;async function render(){const request=++revision,ids=[$('actor').value,$('opponent').value,'pikachu'],sprites=await loadSprites(ids);if(request!==revision)return;
+b=new Battle({playerTeam:[ids[0],ids[0]==='pikachu'?'charizard':'pikachu'],enemyTeam:[ids[1]]});b.state='playing';b.place(b.player,490,460);b.place(b.enemy,815,430);b.drainEvents();r=new Renderer($('scene'),sprites,b);r.setMotionEnabled(!$('motion').checked);const elapsed=Number($('phase').value);
+if(action==='recall'){b.faint(b.player);for(const e of b.drainEvents())r.event(e);}
+if(action==='release')r.event({type:'start'});
+if(action==='switch'){b.requestSwitch();b.switchPokemon(1);for(const e of b.drainEvents())r.event(e);}
+if(action==='impact'){r.event({type:'cast',team:'player',id:b.player.id,key:'r',element:$('element').value,x:b.player.x,y:b.player.y,targetX:b.enemy.x,targetY:b.enemy.y});r.event({type:'hit',team:'player',victimTeam:'enemy',element:$('element').value,x:b.enemy.x,y:b.enemy.y,amount:240,critical:true,angle:0});}
+for(let t=0;t<elapsed;t+=1/120)r.update(Math.min(1/120,elapsed-t));r.draw();
+$('status').textContent=JSON.stringify({action,time:elapsed,actor:ids[0],dexMeters:POKEDEX_HEIGHT_METERS[ids[0]]??'custom',bounds:fighterVisualBounds(b.player,sprites),effects:r.effects.length,particles:r.particles.length});}
+$('perf').onclick=()=>{const isMobile=innerWidth<700;r.setViewport(isMobile?390:1280,isMobile?540:720,{mobile:isMobile,insets:{top:90,bottom:12},dpr:1});for(const option of $('element').options)r.event({type:'hit',team:'player',victimTeam:'enemy',element:option.value,x:b.enemy.x,y:b.enemy.y,amount:240,critical:true,angle:0});r.update(.12);const times=[];for(let i=0;i<90;i++){const start=performance.now();r.draw();times.push(performance.now()-start);}times.sort((a,b)=>a-b);$('status').textContent=JSON.stringify({mobile:isMobile,frames:90,p50:times[45].toFixed(2),p95:times[85].toFixed(2),effects:r.effects.length,particles:r.particles.length});};
+for(const id of ['impact','recall','release','switch'])$(id).onclick=()=>{action=id;render();};for(const id of ['actor','opponent','element','phase','motion'])$(id).oninput=render;render();function draw(){r?.draw();requestAnimationFrame(draw);}draw();
+</script>

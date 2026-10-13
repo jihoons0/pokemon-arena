@@ -1,0 +1,8 @@
+{
+  "asset": "/assets/arena/mt-silver-dawn.webp",
+  "title": "Mt. Silver at dawn",
+  "created": "2026-10-13",
+  "generator": "Built-in imagegen tool",
+  "encoding": "WebP quality 88, original generated PNG retained outside the deployment",
+  "prompt": "Create a production-ready pixel-art environment background for a top-down oblique 2D Pokemon-style battle game, wide landscape aspect ratio 16:9. It is the snowy summit of Mt. Silver. Premium handcrafted Nintendo DS era pixel art, crisp intentional square pixel clusters, rich atmospheric perspective, blue-violet granite cliffs, layered distant snowy peaks in upper 20 percent, dawn peach glow along snowy ridge edges, dark evergreen firs and detailed icy boulders only around outer borders. The ENTIRE central lower region from x=12% to88% and y=31% to85% is a broad flat open snow battle clearing with very subtle footprints, patches of blue packed ice, fine snow texture, an elegant faint engraved circular battlefield emblem centered at 50%,58%. The playable clearing must be open and flat, no large object or mountain in the middle. Side edges x<10% and x>90% contain two small snowy level trainer ledges, no people. Lower edge snowbank only below90%. Balanced detailed environment with clear quiet combat space, attractive light cyan snow highlights against slate and indigo shaded rocks. A polished pixel art RPG location, depth and color rather than simple polygons, sharp readable silhouettes. NO characters, NO Pokemon, NO text, NO HUD, NO UI, NO watermarks. Camera fixed at elevated three-quarter view looking across clearing, not a horizon-level illustration. Fill image edge to edge."
+}

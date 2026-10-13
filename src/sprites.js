@@ -1,8 +1,10 @@
 import {ROSTER} from './roster.js';
+import {measureSpritePixels,spriteScaleFor} from './fighter-size.js';
 
 const spritePromises=new Map();
 const DEFAULT_IDS=ROSTER.map(({id})=>id);
 const ACTION_EXEMPT=new Set(['idle','walk']);
+const tintedSheets=[];
 const clamp=(n,min=0,max=1)=>Math.max(min,Math.min(max,n));
 
 const loadImage=url=>new Promise((resolve,reject)=>{
@@ -15,6 +17,14 @@ const loadImage=url=>new Promise((resolve,reject)=>{
 function canvasFor(width,height){
   if(typeof OffscreenCanvas!=='undefined')return new OffscreenCanvas(width,height);
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;return canvas;
+}
+
+function tintedSheet(image,tint){
+  const cached=tintedSheets.find(entry=>entry.image===image&&entry.tint===tint);if(cached)return cached.canvas;
+  if(!image?.width||!image?.height||(typeof OffscreenCanvas==='undefined'&&typeof document==='undefined'))return image;
+  const canvas=canvasFor(image.width,image.height),ctx=canvas.getContext('2d');
+  ctx.drawImage(image,0,0);ctx.globalCompositeOperation='source-in';ctx.fillStyle=tint==='recall'?'#ff527c':'#fff9e9';ctx.fillRect(0,0,canvas.width,canvas.height);
+  tintedSheets.push({image,tint,canvas});if(tintedSheets.length>12)tintedSheets.shift();return canvas;
 }
 
 function readAnchors(shadow,meta){
@@ -40,7 +50,11 @@ async function loadSet(id){
     const [image,shadow]=await Promise.all([loadImage(meta.image),loadImage(meta.shadowImage)]);
     return [key,{...meta,image,anchors:readAnchors(shadow,meta),totalFrames:meta.durationsFrames.reduce((sum,n)=>sum+n,0)}];
   }));
-  return {id,animations:Object.fromEntries(animations),portrait:await loadImage(manifest.portrait.normal.url)};
+  const byName=Object.fromEntries(animations),idle=byName.idle||animations[0][1];
+  const canvas=canvasFor(idle.image.width,idle.image.height),ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(idle.image,0,0);
+  const metrics=measureSpritePixels(ctx.getImageData(0,0,canvas.width,canvas.height).data,canvas.width,idle,idle.anchors);
+  return {id,animations:byName,metrics,portrait:await loadImage(manifest.portrait.normal.url)};
 }
 
 function promiseFor(id){
@@ -142,7 +156,7 @@ function selectedAnimation(set,fighter){
   return set.animations[fighter.anim]||set.animations.idle||Object.values(set.animations)[0];
 }
 
-export function drawFighter(ctx,sprites,fighter,{alpha=1,ghost=false}={}){
+export function drawFighter(ctx,sprites,fighter,{alpha=1,ghost=false,worldScale=false,appearScale=1,tint=null}={}){
   if(!fighter||fighter.blinkStrike?.hidden)return;
   const set=sprites?.[fighter.id];if(!ctx||!set)return;
   const anim=selectedAnimation(set,fighter);if(!anim)return;
@@ -152,17 +166,18 @@ export function drawFighter(ctx,sprites,fighter,{alpha=1,ghost=false}={}){
   const sheetTime=action&&Number.isFinite(fighter.animDuration)?mappedAnimationTime(anim,fighter.animTime,fighter.animDuration,fighter.animHitAt):fighter.animTime;
   const frame=frameFor(anim,sheetTime,loop);
   const anchor=anim.anchors?.[row]?.[frame]||{x:anim.frameWidth/2,y:anim.frameHeight-4};
-  const scale=fighter.def?.scale??fighter.scale??2;
+  const scale=(worldScale?spriteScaleFor(fighter,set.metrics):fighter.def?.scale??fighter.scale??2)*appearScale;
   const radius=fighter.radius??fighter.def?.radius??20;
   const pose=poseTransformFor(fighter),opacity=Math.max(0,alpha);
   if(opacity<=0)return;
   ctx.save();ctx.globalAlpha*=opacity;
-  if(!ghost){ctx.fillStyle='#172d3b52';ctx.beginPath();ctx.ellipse(Math.round(fighter.x+pose.x*.35),Math.round(fighter.y)+4,(radius+5)*(2-pose.scaleAcross),Math.max(5,(radius+5)*.28),0,0,Math.PI*2);ctx.fill();}
+  const shadowRadius=worldScale&&set.metrics?Math.max(8,Math.min(80,set.metrics.width*scale*.38)):radius+5;
+  if(!ghost){ctx.fillStyle='#172d3b52';ctx.beginPath();ctx.ellipse(Math.round(fighter.x+pose.x*.35),Math.round(fighter.y)+4,shadowRadius*(2-pose.scaleAcross),Math.max(3,shadowRadius*.28),0,0,Math.PI*2);ctx.fill();}
   if(fighter.hurt>0&&!ghost)ctx.filter='brightness(1.9) saturate(.35)';
   ctx.imageSmoothingEnabled=false;
   ctx.translate(Math.round(fighter.x+pose.x),Math.round(fighter.y+pose.y));
   if(pose.scaleAlong!==1||pose.scaleAcross!==1){ctx.rotate(pose.axis);ctx.scale(pose.scaleAlong,pose.scaleAcross);ctx.rotate(-pose.axis);}
   if(pose.rotation)ctx.rotate(pose.rotation);
-  ctx.drawImage(anim.image,frame*anim.frameWidth,row*anim.frameHeight,anim.frameWidth,anim.frameHeight,Math.round(-anchor.x*scale),Math.round(-anchor.y*scale),anim.frameWidth*scale,anim.frameHeight*scale);
+  ctx.drawImage(tint?tintedSheet(anim.image,tint):anim.image,frame*anim.frameWidth,row*anim.frameHeight,anim.frameWidth,anim.frameHeight,Math.round(-anchor.x*scale),Math.round(-anchor.y*scale),anim.frameWidth*scale,anim.frameHeight*scale);
   ctx.restore();
 }
