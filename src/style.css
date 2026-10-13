@@ -255,6 +255,22 @@ summary{cursor:pointer;touch-action:manipulation}summary:focus-visible{outline:3
   .selector .play-modes{margin-bottom:8px}.selector .online-panel{padding:10px 12px;margin-bottom:8px}.selector .online-panel p{margin-top:6px}.selector .online-opponent:empty{display:none}
 }
 
+/* Trainer choices have one clear heading and a persistent selected-skill description. */
+.selector .trainer-select .loadout-heading{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:#e2ecf2;font-size:13px;font-weight:750;line-height:1.4}
+.selector .loadout-heading>span{margin:0;font:inherit;color:inherit}
+.selector .loadout-heading>kbd{font-size:10px;margin:0;padding:2px 5px;min-width:20px;line-height:1.3;color:#b5cbd8;background:#263f50;border:1px solid #597586;border-radius:3px;text-align:center}
+.selector .trainer-select .loadout-description{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 10px;margin:10px 0 0;padding:9px 12px;min-height:0;border-left:2px solid #769692;background:#1c35434d;color:#bed1dc;font-size:12px;line-height:1.6}
+.selector .loadout-description>strong{color:#f3dc94;font-size:inherit;font-weight:700;white-space:nowrap}
+.selector .loadout-description>span{flex:1 1 340px}
+.selector .skill-choices button b{font-size:11px;letter-spacing:0}
+.selector #enemy-special .random-skill{grid-column:1/-1;flex-direction:row;min-height:40px;gap:8px}
+.selector #enemy-special .random-skill svg{width:22px;height:22px}
+.selector #enemy-special .random-skill b{font-size:12px}
+.selector .skill-choices button:hover:not(:disabled){background:#29495a;color:#f2f7f5}
+.selector .skill-choices button[aria-pressed="true"]{background:#484638;color:#f8dc8e;border-color:#e1c26a}
+@media(max-width:600px){.selector .trainer-select .loadout-description{padding:9px 10px;gap:3px}.selector .loadout-description>span{flex-basis:100%}.selector .loadout-heading>kbd{display:none}}
+@media(max-width:359px){.selector .skill-choices{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
 /* The one start/ready action stays visible throughout the mobile draft. */
 .start-dock{display:contents}
 @media (max-width:900px), (pointer:coarse){

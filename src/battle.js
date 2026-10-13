@@ -2,6 +2,8 @@ import {ROSTER_BY_ID, getMoves, DIFFICULTIES, ELEMENTS} from './roster.js';
 import {getTrainerSkill as findTrainerSkill} from './trainer-skills.js';
 import {t,getLocale} from './i18n/i18n.js';
 const teamIds=(ids,fallback)=>{const valid=[...new Set((Array.isArray(ids)?ids:[ids]).filter(id=>ROSTER_BY_ID[id]))].slice(0,6);return valid.length?valid:[fallback];};
+// A full skill rotation spends faster than regeneration; basic attacks and utilities stay free.
+const MP_REGEN_PER_SECOND=3;
 export const BOUNDS = Object.freeze({left:132,right:1148,top:218,bottom:570});
 export const MOVES = getMoves('pikachu');
 export const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
@@ -319,7 +321,7 @@ export class Battle {
       this.switchCooldowns[side]=Math.max(0,this.switchCooldowns[side]-dt);
       for(const member of this.teams[side]){
         for(const key of ['q','w','e','r'])member.cooldowns[key]=Math.max(0,member.cooldowns[key]-dt);
-        if(member.hp>0)member.mp=Math.min(member.maxMp,member.mp+10.5*dt);
+        if(member.hp>0)member.mp=Math.min(member.maxMp,member.mp+MP_REGEN_PER_SECOND*dt);
         if(member!==this.source(side)){
           for(const key of ['stun','burn','slow','boost','haste','weakened','cleanseGuard','attackBoost','invul','basicTimer'])member[key]=Math.max(0,member[key]-dt);
           member.shieldTime=Math.max(0,member.shieldTime-dt);if(!member.shieldTime)member.shield=0;
@@ -492,7 +494,7 @@ export class Battle {
       else if(m.kind==='beam'){if(future<(m.range||820))value=125+(punish?30:0);}
       else if(d<Math.min(760,(m.speed||650)*t.projectileSpeed*1.15))value=55+(punish?25:0)+(m.slow?12:0);
       // Prefer landing after the observed 0.5s invulnerability, not dumping into D.
-      if(value&&a.wasDodging&&!['field','storm','nova','boost'].includes(m.kind))value*=.2;
+      if(value&&a.wasDodging&&!['field','storm','nova','boost'].includes(m.kind)){if(e.mp<50)continue;value*=.2;}
       if(value>score){best=key;score=value;}
     }
     return best;
@@ -511,6 +513,8 @@ export class Battle {
       const motion=this.masterRoute(ideal),recovering=e.action&&e.action.elapsed>=e.action.attackEnd;
       if(motion)this.move(e,motion,dt,(this.enraged?1.08:1)*(recovering?.85:1));
     }
+    // Keep pressure with free basics while rebuilding MP instead of interrupting them with every affordable skill.
+    if(e.mp<50&&e.castRoot===0&&this.aiComboTimer===0&&!e.action&&this.tryBasic(e))return;
     if(this.aiDecision<=0&&e.castRoot===0&&e.castLock===0&&!e.basicWindup&&!e.action&&this.masterAI.observed){
       this.aiDecision=.10;const special=this.getTrainerSkill('enemy');
       const useSpecial=e.cooldowns.s===0&&(special.kind==='haste'&&d>(e.def.basic.melee?160:320)||special.kind==='exhaust'&&d<special.range||special.kind==='ignite'&&d<special.range&&spent||special.kind==='trainerHeal'&&e.hp<e.maxHp*.75||special.kind==='cleanse'&&(e.burn>0||e.slow>0||e.ignite));

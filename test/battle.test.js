@@ -544,7 +544,47 @@ test('energy and cooldown gates preserve resources on rejection and recover over
 
   advanceBattleTime(battle, move.cooldown);
   closeTo(battle.player.cooldowns.q, 0);
-  closeTo(battle.player.mp, Math.min(100, 10.5 * move.cooldown), 1e-7);
+  closeTo(battle.player.mp, 3 * move.cooldown, 1e-7);
+  assert.equal(battle.cast('q'), false, 'cooldown alone must not pay for another skill');
+  advanceBattleTime(battle, (move.cost-battle.player.mp)/3+.01);
+  assert.equal(battle.cast('q'), true, 'saving MP must make the skill available again');
+});
+
+test('sustained skill use spends MP while basic attacks and dodge remain available', () => {
+  const battle = isolatedBattle({playerId:'pikachu',enemyId:'snorlax'});
+  putInLine(battle,500,300);
+  let casts=0;
+  for(let i=0;i<25;i++){
+    if(battle.cast('q'))casts++;
+    advanceBattleTime(battle,battle.moves.q.cooldown+.01);
+  }
+  assert.ok(casts<25 && casts>=15, `sustained casts should eventually need MP: ${casts}`);
+  battle.player.mp=0;
+  battle.player.basicTimer=0;
+  putInLine(battle,120,300);
+  assert.equal(battle.tryBasic(battle.player),true,'basic attacks stay free');
+  assert.equal(battle.cast('d'),true,'dodge stays free');
+  assert.equal(battle.player.mp,0);
+});
+
+test('solo and PvP regenerate both parties equally, without refilling during pauses or switches', () => {
+  for(const mode of ['cpu','pvp']){
+    const battle=isolatedBattle({mode,playerTeam:['pikachu','charizard','venusaur'],enemyTeam:['gengar','blastoise','snorlax']});
+    const fighters=[...battle.teams.player,...battle.teams.enemy];
+    for(const fighter of fighters){fighter.mp=0;fighter.basicTimer=1e6;}
+    battle.teams.player[2].hp=0;
+    battle.teams.enemy[2].hp=0;
+    advanceBattleTime(battle,5);
+    for(const fighter of fighters)closeTo(fighter.mp,fighter.hp>0?15:0);
+    for(const state of ['paused','switching','countdown']){
+      battle.state=state;battle.countdown=3;
+      advance(battle,1);
+      for(const fighter of fighters)closeTo(fighter.mp,fighter.hp>0?15:0);
+    }
+    battle.state='playing';
+    advanceBattleTime(battle,29);
+    for(const fighter of fighters)closeTo(fighter.mp,fighter.hp>0?100:0);
+  }
 });
 
 test('bolt, fan, and volley create their distinct projectile patterns', () => {

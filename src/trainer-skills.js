@@ -17,5 +17,9 @@ export const TRAINER_SKILLS=[
 export const TRAINER_SKILL_BY_ID=Object.fromEntries(TRAINER_SKILLS.map(skill=>[skill.id,skill]));
 export const DEFAULT_TRAINER_SKILL='haste';
 export const getTrainerSkill=id=>TRAINER_SKILL_BY_ID[id]||TRAINER_SKILL_BY_ID[DEFAULT_TRAINER_SKILL];
+// Resolve the CPU's saved choice only when a battle starts, including rematches.
+export const resolveTrainerSkillChoice=(id,random=Math.random)=>id==='random'
+ ? TRAINER_SKILLS[Math.floor(random()*TRAINER_SKILLS.length)].id
+ : getTrainerSkill(id).id;
 export const DEFAULT_PLAYER_TEAM=['pikachu','charizard','blastoise','venusaur','lapras','snorlax'];
 export const DEFAULT_ENEMY_TEAM=['typhlosion','feraligatr','meganium','ampharos','heracross','tyranitar'];
