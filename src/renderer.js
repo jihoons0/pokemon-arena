@@ -64,12 +64,23 @@ export class Renderer {
       this.particles.push({x:x-Math.cos(angle)*rand(3,20),y:y-Math.sin(angle)*rand(3,20)+rand(-5,5),vx:-Math.cos(angle+spread)*v,vy:-Math.sin(angle+spread)*v-rand(5,28),life,maxLife:life,color,size:Math.random()>.55?4:2,kind:'dust'});
     }
   }
+  typeFeedback(e){
+    if(e.periodic||e.effectiveness===1)return;
+    const immune=e.type==='immune',mult=immune?0:e.effectiveness;
+    if(mult===undefined)return;
+    this.typeNotices||=new Map();const key=e.victimTeam+':'+mult,time=this.battle.time||0;
+    if(time-(this.typeNotices.get(key)??-10)<.9)return;
+    this.typeNotices.set(key,time);
+    const text=t('battle.'+(immune?'immune':mult>1?'superEffective':'notEffective'))+(immune?'':' ×'+mult);
+    this.addNumber({x:e.x,y:e.y-82,value:text,color:immune?'#e9cbd0':mult>1?'#d7ff9b':'#f2d3a3',life:1.05,maxLife:1.05});
+  }
   event(e){
     if(!e||!e.type)return;const element=elementOf(e.element),p=palette(element,e.color),teamColor=TEAM_COLORS[e.team]||p.color;
     this.pokeballs.event(e,this.battle);
     const projectileImpact=['bolt','orb','fire','leaf','rock','water','jet','steel'].includes(e.type)||(e.type==='basic'&&!e.team);
     if(projectileImpact){this.addEffect({type:'impact',x:e.x,y:e.y,element,color:p.color,life:.36});this.burst(e.x,e.y-12,p.color,13,110,element);return;}
-    if(e.type==='reset'){this.framing.reset();this.particles=[];this.effects=[];this.numbers=[];this.ghosts=[];this.ghostTimers.clear();this.recoils.clear();this.camera={x:0,y:0,vx:0,vy:0};this.feedback={impactCount:0,peakCameraImpulse:0,lastImpactPower:0};this.shake=0;this.flash=0;return;}
+    if(e.type==='immune'){this.typeFeedback(e);return;}
+    if(e.type==='reset'){this.typeNotices?.clear();this.framing.reset();this.particles=[];this.effects=[];this.numbers=[];this.ghosts=[];this.ghostTimers.clear();this.recoils.clear();this.camera={x:0,y:0,vx:0,vy:0};this.feedback={impactCount:0,peakCameraImpulse:0,lastImpactPower:0};this.shake=0;this.flash=0;return;}
     if(e.type==='switch'){
       this.ghosts=[];this.ghostTimers.clear();return;
     }
@@ -103,7 +114,7 @@ export class Renderer {
       if(e.melee)this.addEffect({type:'slash',x:e.targetX??e.x,y:e.targetY??e.y,angle,r:58,color:p.color,element,life:.24});
       else this.directionalDust(e.x,e.y-10,angle+Math.PI,p.color,4,55);
     }
-    if(e.type==='hit'){
+    if(e.type==='hit'){this.typeFeedback(e);
       const angle=Number.isFinite(e.angle)?e.angle:0,profile=vfxProfile({kind:e.basic?'basic':'bolt',element,damage:e.amount,basic:e.basic}),periodic=Boolean(e.periodic),impactPower=periodic?.42:profile.power*(e.critical?1.15:1);
       this.addNumber({x:e.x+rand(-12,12),y:e.y-48,value:`−${Math.round(e.amount)}`,color:e.color||teamColor,life:.85,maxLife:.85,critical:e.critical});
       if(!periodic&&!e.basic){

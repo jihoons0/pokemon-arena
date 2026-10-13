@@ -1,3 +1,4 @@
+import {FIELD_DAMAGE_INTERVAL} from './type-matchups.js';
 import {t} from './i18n/i18n.js';
 
 // Use the battle's resolved move data, including the roster's ultimate scaling.
@@ -8,7 +9,6 @@ export function moveReadout(move){
     if(move.kind==='volley')value=`${move.damage}×${move.count}`;
     // A fan can hit one opponent at most three times, regardless of projectile count.
     if(move.kind==='fan')value=`${move.damage}×${Math.min(move.count||5,3)}`;
-    if(move.kind==='field'&&move.dot)value=t('battle.powerWithTick',{power:move.damage,tick:move.dot});
     // Storm and ignite already store total damage across their hits/ticks.
   }else if(move.kind==='guard'){
     label='shieldPower';value=String(move.shield);
@@ -23,5 +23,5 @@ export function moveReadout(move){
     label={dodge:'invulPower',cleanse:'cleansePower',exhaust:'weakenPower'}[move.kind];
     value=t('battle.effectSeconds',{sec:move.kind==='dodge'?move.invulEnd:move.duration});
   }
-  return {label:t('battle.'+label),value,cost:t('battle.mpCost',{cost:move.cost||0})};
+  return {label:t('battle.'+label),value,cost:t('battle.mpCost',{cost:move.cost||0}),...(move.kind==='field'&&move.dot?{periodic:t('battle.periodicDamage',{sec:FIELD_DAMAGE_INTERVAL,damage:move.dot})}: {})};
 }

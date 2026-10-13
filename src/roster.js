@@ -1,3 +1,4 @@
+import {POKEMON_TYPES,MOVE_TYPES} from './type-data.js';
 import {getTrainerSkill} from './trainer-skills.js';
 import {t,getLocale} from './i18n/i18n.js';
 
@@ -12,6 +13,7 @@ export const ELEMENTS={
  fighting:{color:'#e58b72',dark:'#934632',effect:'fighting'},poison:{color:'#c98cdb',dark:'#78458f',effect:'poison'},
  ground:{color:'#d9ad72',dark:'#89613d',effect:'ground'},flying:{color:'#a9c9ef',dark:'#607ca8',effect:'flying'},
  bug:{color:'#b9d66d',dark:'#687d32',effect:'bug'},
+ fairy:{color:'#f3b4e2',dark:'#a3548d',effect:'fairy'},
 };
 const move=(name,ko,kind,damage,cooldown,cost,extra={})=>({name,ko,kind,damage,cooldown,cost,animation:'shoot',...extra});
 export const SPECIALS={
@@ -104,9 +106,10 @@ const descriptions={
  boost:m=>`${m.duration}초 동안 공격력이 ${Math.round((m.attackMultiplier-1)*100)}% 증가합니다. 이동하거나 돌진하지 않는 자기 강화입니다.`,
 };
 export const ROSTER=definitions.map(mon=>{
- const color=ELEMENTS[mon.type].color;
+ const types=POKEMON_TYPES[mon.id]||[mon.type],type=types[0],color=ELEMENTS[type].color;
  const moves=Object.fromEntries(Object.entries(mon.moves).map(([key,m])=>{
-  const scaled={...m,damage:key==='r'?Math.round(m.damage*1.3):m.damage,color:m.color||ELEMENTS[m.element||mon.type].color,element:m.element||mon.type,initialCooldown:key==='r'?30:0,ultimate:key==='r'};
+  const element=MOVE_TYPES[mon.id]?.[key]||m.element||type;
+  const scaled={...m,damage:key==='r'?Math.round(m.damage*1.3):m.damage,color:m.color||ELEMENTS[element].color,element,initialCooldown:key==='r'?30:0,ultimate:key==='r'};
   return [key,{
    ...scaled,
    get displayName(){const l=getLocale(),fallback=(l==='ko'?scaled.ko:scaled.name)||scaled.name||scaled.ko;return mon.custom?t('guestMoves.'+mon.id+'.'+key+'.name',undefined,fallback):fallback;},
@@ -119,7 +122,7 @@ export const ROSTER=definitions.map(mon=>{
   }];
  }));
  return {
-  ...mon,
+  ...mon,type,types,
   get displayName(){return t('pokemon.'+mon.id)||(getLocale()==='ko'?mon.ko:mon.name);},
   get displayRole(){return t('roles.'+mon.id)||mon.role;},
   get displayTagline(){return t('taglines.'+mon.id)||mon.tagline;},
@@ -127,8 +130,8 @@ export const ROSTER=definitions.map(mon=>{
   color,
   basic:{
    ...mon.basic,
-   color,
-   element:mon.type,
+   color:ELEMENTS[MOVE_TYPES[mon.id]?.basic||type].color,
+   element:MOVE_TYPES[mon.id]?.basic||type,
    get displayName(){return t('basics.'+mon.id)||mon.basic.name;}
   },
   moves:{

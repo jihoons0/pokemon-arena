@@ -21,6 +21,9 @@ function isolatedBattle(options = {}) {
   const { suppressBasics = true, ...battleOptions } = options;
   const battle = new Battle({ random: () => 0.5, ...battleOptions });
   battle.state = 'playing';
+  // These tests isolate movement, timing and resources from type matchups.
+  // Real roster typing, STAB and immunity have their own integration coverage.
+  for(const f of [...battle.playerTeam,...battle.enemyTeam])f.def={...f.def,types:['test-neutral']};
   battle.updateAI = () => {};
   if (suppressBasics) battle.player.basicTimer = 1_000_000;
   battle.drainEvents();
@@ -182,8 +185,8 @@ test('roster exposes 50 Gen 1/2 Pokémon and Yuna with independent kits', () => 
     assert.ok(ELEMENTS[mon.type]);
     assert.ok(mon.hp > 0 && mon.speed > 0 && mon.radius > 0);
     assert.ok(mon.basic.name && mon.basic.damage > 0 && mon.basic.range > 0 && mon.basic.cooldown > 0 && mon.basic.windup > 0);
-    assert.equal(mon.basic.element, mon.type);
-    assert.equal(mon.basic.color, ELEMENTS[mon.type].color);
+    assert.ok(ELEMENTS[mon.basic.element]);
+    assert.equal(mon.basic.color, ELEMENTS[mon.basic.element].color);
     assert.deepEqual(Object.keys(mon.moves), ['q', 'w', 'e', 'r', 's', 'd']);
     if (mon !== ROSTER[0]) {
       assert.notEqual(mon.moves, ROSTER[0].moves, `${mon.id} must not share a mutable move map`);

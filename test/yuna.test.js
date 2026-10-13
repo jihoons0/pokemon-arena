@@ -70,8 +70,8 @@ test('blink strike hides, hits exactly once beside the target and returns to its
     assert.equal(battle.castFor(yuna,'e'),true);advance(battle,.1);
     assert.equal(yuna.blinkStrike.hidden,true);assert.deepEqual({x:yuna.x,y:yuna.y},origin);
     advance(battle,.12);assert.equal(yuna.blinkStrike.hidden,false);assert.ok(Math.hypot(yuna.x-target.x,yuna.y-target.y)<80);
-    assert.equal(hp-target.hp,yuna.def.moves.e.damage);advance(battle,.45);
-    assert.equal(hp-target.hp,yuna.def.moves.e.damage);assert.equal(yuna.blinkStrike,null);
+    assert.equal(hp-target.hp,Math.round(yuna.def.moves.e.damage*1.5));advance(battle,.45);
+    assert.equal(hp-target.hp,Math.round(yuna.def.moves.e.damage*1.5));assert.equal(yuna.blinkStrike,null);
     assert.deepEqual({x:yuna.x,y:yuna.y},origin);
     const events=battle.drainEvents();assert.equal(events.filter(event=>event.type==='blink').length,2);assert.equal(events.filter(event=>event.type==='slash').length,1);
   }

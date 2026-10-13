@@ -13,7 +13,10 @@ function live(enemyId='typhlosion',difficulty='master'){
 }
 function advance(b,t,input={x:0,y:0}){for(let i=0;i<Math.ceil(t/DT);i++)b.update(DT,input);}
 function pressure(difficulty,mode,enemyId='typhlosion',phase=0){
-  const b=live(enemyId,difficulty);let warningAt=null,attacks=0,dodges=0,elapsed=0;
+  const b=live(enemyId,difficulty);
+  // Compare an equal 25-second pressure window; new STAB can otherwise end it early.
+  b.player.hp=b.player.maxHp=10000;
+  let warningAt=null,attacks=0,dodges=0,elapsed=0;
   while(b.time<25&&b.state==='playing'&&elapsed++<120*35){
     const input=mode==='circle'?{x:Math.cos(b.time*1.2+phase),y:Math.sin(b.time*1.2+phase)}:unit(b.player.x-b.enemy.x,(b.player.y-b.enemy.y)+((b.time+phase)%4<2?65:-65));
     const warning=b.enemy.basicWindup||b.windups.find(w=>w.team==='enemy')||b.hazards.find(h=>h.team==='enemy'&&h.delay>0);
@@ -118,6 +121,8 @@ test('all Master kits remain finite and retain HP, D and R contracts',()=>{
 
 function activePressure(difficulty,enemyId){
   const b=live(enemyId,difficulty);b.player.basicTimer=0;
+  // Keep both combatants alive for the full measurement window despite type advantages.
+  for(const f of [b.player,b.enemy])f.hp=f.maxHp=10000;
   let warningAt=null,attacks=0,enemyDodges=0,guards=0,frames=0;
   const skills={q:0,w:0,e:0,d:0};
   while(b.time<25&&b.state==='playing'&&frames++<120*35){

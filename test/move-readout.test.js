@@ -10,7 +10,7 @@ test('Nidoking shows per-hit, periodic and scaled ultimate power with actual cos
   assert.deepEqual(['q','w','e','r'].map(key=>moveReadout(moves[key])),[
     {label:'위력',value:'31×3',cost:'MP 18'},
     {label:'위력',value:'82',cost:'MP 22'},
-    {label:'위력',value:'42+8/틱',cost:'MP 25'},
+    {label:'위력',value:'42',cost:'MP 25',periodic:'0.55초마다 +8'},
     {label:'위력',value:'397',cost:'MP 50'},
   ]);
 });
@@ -38,8 +38,8 @@ test('every selectable move has a finite, localized readout in every language',a
     for(const locale of ['ko','en','ja','es','zh']){
       await setLocale(locale);
       for(const move of [...ROSTER.flatMap(mon=>Object.values(mon.moves)),...TRAINER_SKILLS]){
-        const {label,value,cost}=moveReadout(move);
-        assert.doesNotMatch([label,value,cost].join(' '),/undefined|NaN|battle\./);
+        const {label,value,cost,periodic=''}=moveReadout(move);
+        assert.doesNotMatch([label,value,cost,periodic].join(' '),/undefined|NaN|battle\./);
         assert.ok(label.length>0&&value.length>0&&cost.length>0);
         if(!move.damage)assert.notEqual(value,'0',`${move.kind} must show its effect`);
       }
