@@ -336,6 +336,13 @@ summary{cursor:pointer;touch-action:manipulation}summary:focus-visible{outline:3
 .result-panel .secondary-button:hover:not(:disabled),.result-panel .secondary-button:focus-visible{background:#375b6c;color:#fff7df}
 @media(max-height:500px) and (orientation:landscape){.result-panel:has(.mvp-highlight[hidden]){display:block;max-width:500px}.result-panel:has(.mvp-highlight[hidden])>*{margin-bottom:10px}}
 
+/* Insufficient MP wins over cooldown, hover and touch fills on every viewport. */
+body.in-battle .battle-console .ability-button.no-energy,
+body.in-battle .battle-console .ability-button.no-energy:hover,
+body.in-battle .battle-console .ability-button.no-energy:active,
+body.in-battle .battle-console .ability-button.no-energy.touch-held{background:#f9d8d1;border-color:#c7796b;box-shadow:0 3px 0 #ac6d61,inset 0 0 0 1px #fff6;opacity:1}
+body.in-battle .battle-console .ability-button.no-energy .ability-cost{background:#f2beb1;color:#8c3024}
+
 .online-identity{display:flex;align-items:center;gap:12px;flex-basis:100%;grid-column:1/-1;margin-bottom:4px;font-size:13px;font-weight:700}
 .selector .online-identity input{flex:1;min-width:0;width:auto;max-width:320px;text-transform:none;letter-spacing:0;font:500 16px var(--font)}
 .selector #online-invite{margin:0 0 12px;color:#f5da8a;font-size:15px;font-weight:700}
