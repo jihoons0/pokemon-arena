@@ -21,7 +21,8 @@ test('cached dex heights cover every canonical species and normalize padded shee
   for(const def of ROSTER.filter(m=>m.dex))assert.ok(POKEDEX_HEIGHT_METERS[def.id]>0,def.id);
   assert.equal(POKEDEX_HEIGHT_METERS.pikachu,.4);assert.equal(POKEDEX_HEIGHT_METERS.lugia,5.2);assert.equal(POKEDEX_HEIGHT_METERS.steelix,9.2);
   for(const id of ['charizard','mewtwo','lugia'])for(const height of [20,80])assert.equal(spriteScaleFor({id},{height,width:height})*height,POKEDEX_HEIGHT_METERS[id]*WORLD_PIXELS_PER_METER);
-  assert.equal(spriteScaleFor({id:'yuna',def:{scale:1.75}},{height:40,width:30}),1.75*.84);
+  const pikachuHeight=spriteScaleFor({id:'pikachu'},{height:30,width:24})*30;
+  for(const height of [32,64,96])assert.equal(spriteScaleFor({id:'yuna',def:{scale:1.75}},{height,width:height})*height,pikachuHeight*1.15);
   assert.equal(spriteScaleFor({id:'eevee'},{height:20,width:20})*20,22,'readability floor for tiny species');
 });
 test('alpha measurement excludes padding and remains relative to each frame foot anchor',()=>{

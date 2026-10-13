@@ -15,7 +15,7 @@ export class AudioManager {
     this.resultTracks={won:this._createMedia('/assets/audio/arena-victory.wav'),lost:this._createMedia('/assets/audio/arena-defeat.wav')};for(const track of Object.values(this.resultTracks))track.preload='auto';this.resultMusic=null;this.resultOutcome=null;
     this.muted=false;this.started=false;this.ctx=null;this.volume=.32;this.sfxVolume=.86;this.music.volume=this.volume;
     this.failed=false;this.blocked=false;this.feedbackPaused=false;this.hapticsEnabled=true;this.reducedMotion=!!this._window?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-    this.sfxGain=null;this.compressor=null;this.emittedSoundCount=0;this.hapticRequestCount=0;this.hapticEmissionCount=0;this.lastCue=null;this.lastHaptic=null;this.lastCryDex=null;
+    this.sfxGain=null;this.compressor=null;this.emittedSoundCount=0;this.hapticRequestCount=0;this.hapticEmissionCount=0;this.lastCue=null;this.lastHaptic=null;this.lastCryDex=null;this.lastCryId=null;
     this._cueTimes=new Map();this._pendingUltimates=new Map();this._hapticAt=-Infinity;this._hapticPriority=0;this._hapticUntil=0;this._musicDucked=false;this._duckTimer=null;this._tabInactive=!!this._window?.document?.hidden;this._cry=null;this._cryToken=0;
     this.music.addEventListener?.('error',()=>{this.failed=true;});
     this._onBlur=()=>{this._tabInactive=true;this.stopHaptics();};
@@ -114,7 +114,7 @@ export class AudioManager {
   ui(kind,mon=null){
     const normalized={select:'pick',add:'pick',delete:'remove',back:'cancel'}[kind]||kind;const throttle=normalized==='hover'?85:normalized==='error'?90:35;
     const emitted=this._emitCue('ui:'+normalized,{},throttle);
-    if(normalized==='pick'&&mon?.dex)this._playCry(mon);
+    if(normalized==='pick')this._playCry(mon);
     const haptic=hapticForCue('ui:'+normalized);if(haptic)this._requestHaptic(haptic,'ui:'+normalized);
     return emitted;
   }
@@ -126,8 +126,9 @@ export class AudioManager {
     const timer=setInterval(()=>{step++;try{cry.volume=Math.max(0,start*(1-step/steps));}catch{}if(step>=steps){clearInterval(timer);try{cry.pause();cry.currentTime=0;}catch{}}},18);timer?.unref?.();
   }
   _playCry(mon){
-    const dex=Math.trunc(Number(mon?.dex));if(!Number.isFinite(dex)||dex<1||this.muted||this.sfxVolume<=0)return false;
-    this._stopCry(true);const cry=this._createMedia('/assets/audio/cries/'+dex+'.ogg');this._cry=cry;this.lastCryDex=dex;cry.preload='auto';cry.volume=this._cryVolume();cry.muted=this.muted;
+    const dex=Math.trunc(Number(mon?.dex)),src=mon?.cryUrl||(Number.isFinite(dex)&&dex>0?'/assets/audio/cries/'+dex+'.ogg':null);
+    if(!src||this.muted||this.sfxVolume<=0)return false;
+    this._stopCry(true);const cry=this._createMedia(src);this._cry=cry;this.lastCryDex=dex>0?dex:null;this.lastCryId=mon?.id||null;cry.preload='auto';cry.volume=this._cryVolume();cry.muted=this.muted;
     const token=++this._cryToken;cry.addEventListener?.('ended',()=>{if(token===this._cryToken)this._cry=null;});cry.addEventListener?.('error',()=>{if(token===this._cryToken)this._cry=null;});
     try{const result=cry.play();result?.catch?.(()=>{if(token===this._cryToken)this._cry=null;});return true;}catch{if(token===this._cryToken)this._cry=null;return false;}
   }
@@ -168,7 +169,7 @@ export class AudioManager {
     else return false;
     const emitted=this._emitCue(cue,hapticDetails,throttle);
     const haptic=hapticForCue(cue,hapticDetails);if(haptic&&(!event.team||event.team==='player'||event.victimTeam==='player'))this._requestHaptic(haptic,cue);
-    if(type==='switch'&&actor?.def?.dex)this._playCry(actor.def);
+    if(type==='switch'&&actor?.def)this._playCry(actor.def);
     return emitted;
   }
   _gamepadActuators(){
@@ -192,6 +193,6 @@ export class AudioManager {
     for(const actuator of this._gamepadActuators())try{if(typeof actuator.reset==='function')actuator.reset();else if(typeof actuator.playEffect==='function')actuator.playEffect('dual-rumble',{startDelay:0,duration:0,strongMagnitude:0,weakMagnitude:0})?.catch?.(()=>{});else actuator.pulse?.(0,0)?.catch?.(()=>{});}catch{}
   }
   getFeedbackState(){
-    const capabilities=this._capabilities();return {...capabilities,audioSupported:!!(this.ctx||this._audioContextFactory||this._contextConstructor()),unlocked:this.ctx?.state==='running',contextState:this.ctx?.state||'uninitialized',cryPlaying:!!this._cry&&!this._cry.paused,cryReadyState:this._cry?.readyState||0,cryTime:Number((this._cry?.currentTime||0).toFixed(3)),started:this.started,paused:this.feedbackPaused,muted:this.muted,musicVolume:this.volume,sfxVolume:this.sfxVolume,hapticsEnabled:this.hapticsEnabled,effectiveHapticsEnabled:this.hapticsEnabled&&!this.reducedMotion&&!this.feedbackPaused&&!this._tabInactive&&capabilities.hapticsSupported,reducedMotion:this.reducedMotion,tabInactive:this._tabInactive,musicDucked:this._musicDucked,emittedSoundCount:this.emittedSoundCount,hapticRequestCount:this.hapticRequestCount,hapticEmissionCount:this.hapticEmissionCount,lastCue:this.lastCue,lastHaptic:this.lastHaptic,lastCryDex:this.lastCryDex,resultOutcome:this.resultOutcome,resultMusicPlaying:!!this.resultMusic&&!this.resultMusic.paused};
+    const capabilities=this._capabilities();return {...capabilities,audioSupported:!!(this.ctx||this._audioContextFactory||this._contextConstructor()),unlocked:this.ctx?.state==='running',contextState:this.ctx?.state||'uninitialized',cryPlaying:!!this._cry&&!this._cry.paused,cryReadyState:this._cry?.readyState||0,cryTime:Number((this._cry?.currentTime||0).toFixed(3)),started:this.started,paused:this.feedbackPaused,muted:this.muted,musicVolume:this.volume,sfxVolume:this.sfxVolume,hapticsEnabled:this.hapticsEnabled,effectiveHapticsEnabled:this.hapticsEnabled&&!this.reducedMotion&&!this.feedbackPaused&&!this._tabInactive&&capabilities.hapticsSupported,reducedMotion:this.reducedMotion,tabInactive:this._tabInactive,musicDucked:this._musicDucked,emittedSoundCount:this.emittedSoundCount,hapticRequestCount:this.hapticRequestCount,hapticEmissionCount:this.hapticEmissionCount,lastCue:this.lastCue,lastHaptic:this.lastHaptic,lastCryDex:this.lastCryDex,lastCryId:this.lastCryId,resultOutcome:this.resultOutcome,resultMusicPlaying:!!this.resultMusic&&!this.resultMusic.paused};
   }
 }

@@ -7,7 +7,8 @@ const FOLDED_BODY_LENGTH={steelix:2.2,gyarados:2};
 
 export function spriteScaleFor(fighter,metrics){
   const legacy=fighter?.def?.scale??fighter?.scale??2;
-  if(fighter?.id==='yuna')return legacy*.84;
+  // Match the visible silhouette, not Yuna's larger source sprite cells.
+  if(fighter?.id==='yuna'&&metrics?.height)return Math.max(22,POKEDEX_HEIGHT_METERS.pikachu*WORLD_PIXELS_PER_METER)*1.15/metrics.height;
   const meters=POKEDEX_HEIGHT_METERS[fighter?.id];
   if(!meters||!metrics?.height)return legacy;
   const nativeExtent=FOLDED_BODY_LENGTH[fighter.id]

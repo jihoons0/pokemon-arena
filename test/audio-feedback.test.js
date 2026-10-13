@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {AudioManager} from '../src/audio.js';
 import {buildCuePlan,normalizeVibrationPattern} from '../src/feedback.js';
+import {ROSTER_BY_ID} from '../src/roster.js';
 
 class FakeParam{
   constructor(value=0){this.value=value;}
@@ -115,6 +116,27 @@ test('ui pick supports local cries and fades the previous cry instead of stackin
   audio.ui('pick',{dex:25});const firstCry=FakeAudio.instances.find(item=>item.src.endsWith('/25.ogg'));assert.ok(firstCry);assert.equal(firstCry.paused,false);
   audio.ui('pick',{dex:6});const secondCry=FakeAudio.instances.find(item=>item.src.endsWith('/6.ogg'));assert.ok(secondCry);assert.equal(audio.getFeedbackState().lastCryDex,6);
   await new Promise(resolve=>setTimeout(resolve,75));assert.equal(firstCry.paused,true);assert.equal(secondCry.paused,false);
+});
+
+test('Yuna selection plays her own meow and fades between guest and Pokémon cries',async()=>{
+  FakeAudio.instances.length=0;const audio=makeManager();await audio.unlock();
+  audio.ui('pick',ROSTER_BY_ID.pikachu);const pikachu=audio._cry;
+  audio.ui('pick',ROSTER_BY_ID.yuna);const meow=audio._cry;
+  assert.equal(meow.src,'/assets/audio/cries/yuna.wav');assert.equal(meow.paused,false);
+  assert.equal(audio.getFeedbackState().lastCryDex,null);assert.equal(audio.getFeedbackState().lastCryId,'yuna');
+  audio.ui('pick',ROSTER_BY_ID.yuna);const repeated=audio._cry;
+  meow.listeners.ended();assert.equal(audio._cry,repeated,'an older clip ending must not clear the new cry');
+  await new Promise(resolve=>setTimeout(resolve,75));assert.equal(pikachu.paused,true);assert.equal(meow.paused,true);assert.equal(repeated.paused,false);
+  audio.toggle();assert.equal(repeated.paused,true);const before=FakeAudio.instances.length;
+  audio.ui('pick',ROSTER_BY_ID.yuna);assert.equal(FakeAudio.instances.length,before,'muted selection stays silent');
+  audio.toggle();audio.setSfxVolume(0);audio.ui('pick',ROSTER_BY_ID.yuna);assert.equal(FakeAudio.instances.length,before,'zero SFX volume stays silent');
+});
+
+test('Yuna uses the same cry playback on switch and stops when battle audio pauses',async()=>{
+  const audio=makeManager();await audio.unlock();
+  audio.handleBattleEvent({type:'switch',team:'player',id:'yuna'},{player:{id:'yuna',def:ROSTER_BY_ID.yuna}});
+  const meow=audio._cry;assert.equal(meow.src,'/assets/audio/cries/yuna.wav');assert.equal(meow.playCount,1);
+  audio.pause();await new Promise(resolve=>setTimeout(resolve,75));assert.equal(meow.paused,true);assert.equal(audio.getFeedbackState().cryPlaying,false);
 });
 
 test('failed or preempted gamepad effects do not count as successful hardware feedback',async()=>{

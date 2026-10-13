@@ -19,6 +19,17 @@ test('all fifty Pokémon have an actual locally bundled Ogg cry and source attri
   assert.equal(metadata.assets.length,50);
   for(const mon of ROSTER.filter(mon=>!mon.custom)){const bytes=readFileSync(resolve(root,`assets/audio/cries/${mon.dex}.ogg`));assert.equal(bytes.toString('ascii',0,4),'OggS');assert.ok(bytes.length>500);const entry=metadata.assets.find(item=>item.id===mon.id);assert.equal(entry.dex,mon.dex);assert.ok(entry.sourceUrl.startsWith('https://raw.githubusercontent.com/PokeAPI/cries/'));}
 });
+test('Yuna has an attributed playable PCM meow instead of a borrowed Pokémon cry',()=>{
+  const entry=JSON.parse(readFileSync(resolve(root,'assets/audio/cries/yuna-credits.json'),'utf8'));
+  const yuna=ROSTER.find(mon=>mon.id==='yuna'),bytes=readFileSync(resolve(root,'.'+yuna.cryUrl));
+  assert.equal(entry.file,yuna.cryUrl);assert.match(entry.source,/Original/);
+  assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256);
+  assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.toString('ascii',8,12),'WAVE');
+  assert.equal(bytes.readUInt16LE(20),1);assert.equal(bytes.readUInt16LE(22),1);assert.equal(bytes.readUInt32LE(24),entry.sampleRate);assert.equal(bytes.readUInt16LE(34),16);
+  const duration=bytes.readUInt32LE(40)/bytes.readUInt32LE(28);assert.ok(duration>.5&&duration<1.2);
+  let peak=0;for(let offset=44;offset<bytes.length;offset+=2)peak=Math.max(peak,Math.abs(bytes.readInt16LE(offset)));
+  assert.ok(peak>1000&&peak<32767,'audible samples without clipping');
+});
 test('ordinary skills as well as ultimates have restrained tactile feedback plans',()=>{
   for(const kind of ['bolt','fan','volley','slash','dash','guard','boost','pulse','field','beam'])for(const cue of ['cast','release']){const spec=hapticForCue(cue,{kind});assert.ok(spec);assert.ok(spec.pattern.reduce((sum,n)=>sum+n,0)<=50);assert.ok(spec.strong<=.4);}
 });

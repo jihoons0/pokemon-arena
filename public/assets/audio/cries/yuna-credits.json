@@ -1,0 +1,12 @@
+{
+  "id": "yuna",
+  "name": "유나",
+  "file": "/assets/audio/cries/yuna.wav",
+  "source": "Original procedural digitized cat meow",
+  "generator": "scripts/generate-yuna-meow.py",
+  "note": "Synthesized for Yuna; no recordings or Pokémon cries were sampled.",
+  "format": "Mono 16-bit PCM WAV with seven-bit amplitude quantization",
+  "sampleRate": 11025,
+  "durationSeconds": 0.8199546485260771,
+  "sha256": "949a6c7e33c0b08814b4c68c3578e14d30eee7080d2f9c8d7c6284a58374a3b9"
+}

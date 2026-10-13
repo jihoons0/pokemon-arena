@@ -78,7 +78,7 @@ const definitions=[
 ];
 // Original guest character; no Pokédex number or borrowed Pokémon cry.
 definitions.push({
- id:'yuna',name:'Yuna',ko:'유나',custom:true,dex:null,gen:null,type:'normal',role:'기습형 샴고양이',
+ id:'yuna',name:'Yuna',ko:'유나',custom:true,dex:null,gen:null,cryUrl:'/assets/audio/cries/yuna.wav',type:'normal',role:'기습형 샴고양이',
  tagline:'토하기로 견제하고 전광석화로 기습한 뒤 원래 자리로 돌아옵니다.',hp:720,speed:216,radius:20,scale:1.75,
  basic:{name:'앞발 툭',damage:27,range:125,cooldown:.76,projectileSpeed:0,windup:.16,melee:true},
  moves:{
