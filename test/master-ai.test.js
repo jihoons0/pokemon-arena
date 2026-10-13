@@ -80,7 +80,7 @@ test('player dodge is learned from delayed visible movement, not private cooldow
   const b=live();idleEnemy(b);b.player.cooldowns.d=1.7;advance(b,.3);assert.equal(b.masterAI.dodgeUntil,0);
   b.player.cooldowns.d=0;b.input={x:1,y:0};b.cast('d');advance(b,.15);assert.equal(b.masterAI.dodgeUntil,0);advance(b,.13);assert.ok(b.masterAI.dodgeUntil>b.time+1);
 });
-test('all 50 Master kits remain finite and retain HP, D and R contracts',()=>{
+test('all Master kits remain finite and retain HP, D and R contracts',()=>{
   for(const mon of ROSTER){const b=live(mon.id);b.player.basicTimer=0;let casts=0;
     for(let frame=0;frame<120*36&&b.state==='playing';frame++){
       if(frame%240===0){b.input={x:0,y:1};b.cast('d');}if(frame%360===0)b.cast('q');

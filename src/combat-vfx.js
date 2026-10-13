@@ -12,6 +12,7 @@ const FAMILY_BY_ELEMENT={
 const KIND_PROFILES={
   basic:{anticipation:.16,release:.18,impact:.22,weight:.55},bolt:{anticipation:.26,release:.28,impact:.34,weight:.78},
   volley:{anticipation:.3,release:.25,impact:.3,weight:.7},fan:{anticipation:.3,release:.34,impact:.32,weight:.76},
+  blinkStrike:{anticipation:.18,release:.3,impact:.38,weight:1},
   dash:{anticipation:.24,release:.38,impact:.38,weight:1},slash:{anticipation:.25,release:.32,impact:.4,weight:1.08},
   pulse:{anticipation:.34,release:.42,impact:.42,weight:1.05},field:{anticipation:.38,release:.42,impact:.45,weight:1.02},
   storm:{anticipation:.56,release:.52,impact:.5,weight:1.25},nova:{anticipation:.58,release:.52,impact:.56,weight:1.35},

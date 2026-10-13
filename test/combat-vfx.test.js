@@ -18,8 +18,8 @@ function mockRenderer(){
   return {ctx,battle,renderer:new Renderer({getContext:()=>ctx},{},battle)};
 }
 
-test('all 50 kits resolve to finite kind and element VFX profiles',()=>{
-  assert.equal(ROSTER.length,50);
+test('all character kits resolve to finite kind and element VFX profiles',()=>{
+  assert.equal(ROSTER.length,51);
   for(const mon of ROSTER){
     for(const [key,move] of Object.entries(mon.moves)){
       const profile=vfxProfile({kind:move.kind,element:move.element||mon.type,damage:move.damage,key,ultimate:key==='r'});

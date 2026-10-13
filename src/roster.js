@@ -74,6 +74,18 @@ const definitions=[
  {id:'scyther',name:'Scyther',ko:'스라크',dex:123,gen:1,type:'bug',role:'근접 암살자',tagline:'빠르게 파고들어 칼춤으로 강화한 낫 베기를 연속으로 꽂습니다.',hp:760,speed:220,radius:23,scale:2.5,basic:{name:'연속자르기',damage:27,range:110,cooldown:.62,projectileSpeed:0,windup:.14,melee:true},moves:{q:move('Wing Attack','날개치기','dash',67,5.5,18,{distance:220,dashSpeed:1200,element:'flying'}),w:move('Swords Dance','칼춤','boost',0,10.5,22,{duration:4.2,attackMultiplier:1.35}),e:move('Slash','베어가르기','slash',96,8,23,{range:165,stun:.35,element:'normal'}),r:move('Gale Blades','질풍의칼날','storm',280,62,48,{radius:165,strikes:4,element:'flying'})}},
  {id:'aerodactyl',name:'Aerodactyl',ko:'프테라',dex:142,gen:1,type:'flying',role:'공중 돌격수',tagline:'바위 탄막으로 흔든 뒤 급강하와 충격파로 대형 폭발을 엽니다.',hp:820,speed:216,radius:26,scale:2.5,basic:{name:'돌조각',damage:30,range:365,cooldown:.8,projectileSpeed:750,windup:.16},moves:{q:move('Rock Blast','록블라스트','volley',31,4.2,18,{count:3,interval:.15,speed:730,element:'rock'}),w:move('Aerial Ace','제비반환','dash',76,7,21,{distance:250,dashSpeed:1160}),e:move('Ancient Roar','원시의포효','pulse',82,8.5,24,{range:220,stun:.4,element:'rock'}),r:move('Meteor Crash','운석충돌','nova',300,66,49,{radius:215,count:14,element:'rock'})}},
 ];
+// Original guest character; no Pokédex number or borrowed Pokémon cry.
+definitions.push({
+ id:'yuna',name:'Yuna',ko:'유나',custom:true,dex:null,gen:null,type:'normal',role:'기습형 샴고양이',
+ tagline:'토하기로 견제하고 전광석화로 기습한 뒤 원래 자리로 돌아옵니다.',hp:720,speed:216,radius:20,scale:1.75,
+ basic:{name:'앞발 툭',damage:27,range:125,cooldown:.76,projectileSpeed:0,windup:.16,melee:true},
+ moves:{
+  q:move('Spit Vomit','토하기','bolt',58,4.2,17,{speed:640,element:'poison',projectileType:'vomit',color:'#b4c46c',slow:1.1,animation:'shoot',description:'상대를 향해 토사물을 뱉습니다. 적중하면 잠깐 둔화시킵니다.'}),
+  w:move('Claw Swipe','할퀴기','slash',78,6.8,20,{range:145,stun:.2,animation:'attack'}),
+  e:move('Quick Attack','전광석화','blinkStrike',82,9,24,{range:430,strikeRange:92,vanishTime:.1,returnAt:.28,duration:.4,animation:'quickstrike'}),
+  r:move('Hyper Beam','파괴광선','beam',285,66,48,{range:920,width:78,charge:.8,animation:'shoot'}),
+ }
+});
 const addedEffects=m=>[m.slow&&'둔화',m.burn&&'화상',m.stun&&'경직'].filter(Boolean);
 const effectClause=m=>{const effects=addedEffects(m);return effects.length?` 적중 시 ${effects.join('·')} 효과도 줍니다.`:'';};
 const descriptions={
@@ -81,6 +93,7 @@ const descriptions={
  fan:m=>`시전 순간의 조준 방향으로 ${m.count||5}발을 부채꼴로 발사합니다. 발사 후 방향은 바뀌지 않습니다.${effectClause(m)}`,
  volley:m=>`${m.count||3}발을 ${(m.interval||0).toFixed(2)}초 간격으로 연속 발사해 회피 타이밍을 나눕니다.${effectClause(m)}`,
  dash:m=>`이동 방향으로 ${m.distance}만큼 돌진하며 접촉한 상대에게 피해를 줍니다. 정지 중에는 상대 방향으로 돌진합니다.${effectClause(m)}`,
+ blinkStrike:m=>`사거리 ${m.range} 안의 상대 옆으로 순간이동해 한 번 공격한 뒤 원래 자리로 돌아옵니다. 시전 시 조준한 위치를 벗어나면 피할 수 있습니다.`,
  slash:m=>`주변 ${m.range||165} 범위를 휩쓸어 피해를 주고 밀어냅니다.${effectClause(m)}`,
  pulse:m=>`자신 주변 ${m.range||165} 범위에 충격파를 내보내 피해를 줍니다.${effectClause(m)}`,
  field:m=>`조준 지점에 반경 ${m.radius}의 장판을 ${m.duration}초 동안 남깁니다. 최초 폭발${m.dot?'과 지속 피해':''}${addedEffects(m).length?`에 더해 ${addedEffects(m).join('·')} 효과를 줍니다.`:'를 일으킵니다.'}`,
@@ -93,11 +106,12 @@ const descriptions={
 export const ROSTER=definitions.map(mon=>{
  const color=ELEMENTS[mon.type].color;
  const moves=Object.fromEntries(Object.entries(mon.moves).map(([key,m])=>{
-  const scaled={...m,damage:key==='r'?Math.round(m.damage*1.3):m.damage,color:ELEMENTS[m.element||mon.type].color,element:m.element||mon.type,initialCooldown:key==='r'?30:0,ultimate:key==='r'};
+  const scaled={...m,damage:key==='r'?Math.round(m.damage*1.3):m.damage,color:m.color||ELEMENTS[m.element||mon.type].color,element:m.element||mon.type,initialCooldown:key==='r'?30:0,ultimate:key==='r'};
   return [key,{
    ...scaled,
-   get displayName(){const l=getLocale();return (l==='ko'?scaled.ko:scaled.name)||scaled.name||scaled.ko;},
+   get displayName(){const l=getLocale(),fallback=(l==='ko'?scaled.ko:scaled.name)||scaled.name||scaled.ko;return mon.custom?t('guestMoves.'+mon.id+'.'+key+'.name',undefined,fallback):fallback;},
    get description(){
+    if(mon.custom)return t('guestMoves.'+mon.id+'.'+key+'.description',scaled,m.description||descriptions[scaled.kind](scaled,mon));
     const fn=t('moveDesc.'+scaled.kind);
     if(typeof fn==='function')return fn(scaled,mon);
     return descriptions[scaled.kind](scaled,mon);

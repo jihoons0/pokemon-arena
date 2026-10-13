@@ -139,7 +139,7 @@ export class Match {
   pause(seat,kind,forced=[]) {
     if(this.phase!=='playing'||this.battle.state!=='playing'||this.pauseInfo)return false;
     const side=SIDES[seat];
-    if(kind==='switch'&&!forced.length&&(this.battle.switchCooldowns[side]>0||!this.battle.teams[side].some((f,i)=>f.hp>0&&i!==this.battle.activeIndices[side])))return false;
+    if(kind==='switch'&&!forced.length&&(this.battle.source(side).blinkStrike||this.battle.switchCooldowns[side]>0||!this.battle.teams[side].some((f,i)=>f.hp>0&&i!==this.battle.activeIndices[side])))return false;
     this.pauseInfo={kind,by:seat,forced,chosen:[],until:this.now()+(kind==='switch'?15000:60000)};
     this.battle.state='paused';this.battle.hitStop=0;this.accumulator=0;
     for(const c of this.controls)c.input=neutral();

@@ -143,7 +143,8 @@ function selectedAnimation(set,fighter){
 }
 
 export function drawFighter(ctx,sprites,fighter,{alpha=1,ghost=false}={}){
-  const set=sprites?.[fighter.id];if(!ctx||!set||!fighter)return;
+  if(!fighter||fighter.blinkStrike?.hidden)return;
+  const set=sprites?.[fighter.id];if(!ctx||!set)return;
   const anim=selectedAnimation(set,fighter);if(!anim)return;
   const row=Math.min(anim.directionCount-1,directionFor(fighter.facing));
   const dead=fighter.hp<=0,action=!dead&&!ACTION_EXEMPT.has(fighter.anim);

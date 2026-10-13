@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
 import {WebSocket} from 'ws';
+import {PROTOCOL} from '../src/net-state.js';
 
 // Exercises the real Worker / Durable Object / WebSocket path, with no browser hooks.
 const endpoint=(process.argv[2]||'http://127.0.0.1:8787').replace(/\/$/,'');

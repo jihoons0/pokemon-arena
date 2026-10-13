@@ -10,7 +10,7 @@ export const unit=(x,y)=>{const d=Math.hypot(x,y)||1;return {x:x/d,y:y/d};};
 export function segmentDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,t=clamp(((px-x1)*dx+(py-y1)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(px-x1-t*dx,py-y1-t*dy);}
 function makeFighter(id,team,x,y){
   const def=ROSTER_BY_ID[id]||ROSTER_BY_ID.pikachu;
-  return {id:def.id,team,def,x,y,px:x,py:y,vx:0,vy:0,hp:def.hp,maxHp:def.hp,mp:100,maxMp:100,speed:def.speed,radius:def.radius,facing:team==='player'?0:Math.PI,anim:'idle',animTime:0,animLock:0,animDuration:0,animHitAt:null,pose:null,dodgeRecovery:0,dodgeGuard:null,action:null,castRoot:0,castLock:0,invul:0,hurt:0,stun:0,burn:0,burnTick:.7,slow:0,boost:0,haste:0,hasteMultiplier:1.5,weakened:0,cleanseGuard:0,ignite:null,attackBoost:0,attackMultiplier:1,fainted:false,shield:0,shieldTime:0,moving:false,dash:null,basicTimer:team==='enemy'?.7:0,basicWindup:null,cooldowns:Object.fromEntries(Object.entries(def.moves).map(([key,m])=>[key,m.initialCooldown||0]))};
+  return {id:def.id,team,def,x,y,px:x,py:y,vx:0,vy:0,hp:def.hp,maxHp:def.hp,mp:100,maxMp:100,speed:def.speed,radius:def.radius,facing:team==='player'?0:Math.PI,anim:'idle',animTime:0,animLock:0,animDuration:0,animHitAt:null,pose:null,dodgeRecovery:0,dodgeGuard:null,action:null,castRoot:0,castLock:0,invul:0,hurt:0,stun:0,burn:0,burnTick:.7,slow:0,boost:0,haste:0,hasteMultiplier:1.5,weakened:0,cleanseGuard:0,ignite:null,attackBoost:0,attackMultiplier:1,fainted:false,shield:0,shieldTime:0,moving:false,dash:null,blinkStrike:null,basicTimer:team==='enemy'?.7:0,basicWindup:null,cooldowns:Object.fromEntries(Object.entries(def.moves).map(([key,m])=>[key,m.initialCooldown||0]))};
 }
 export class Battle {
   constructor({random=Math.random,playerId='pikachu',enemyId='typhlosion',playerTeam,enemyTeam,playerSpecial='haste',enemySpecial='haste',difficulty='standard',mode='cpu'}={}){
@@ -56,12 +56,13 @@ export class Battle {
     this.enraged=false;this.input={x:0,y:0};this.aiDecision=.75;this.aiDodgeTimer=1.5;this.aiComboTimer=0;this.groupId=0;this.hitGroups=new Map();this.lastHint=-10;this.emit('reset');
   }
   clearOutgoing(f){
+    this.returnBlink(f);
     // A withdrawn Pokémon stops fighting, but never erases the opponent's released attacks.
     for(const key of ['projectiles','hazards','windups','tasks'])this[key]=this[key].filter(effect=>effect.team!==f.team);
     f.basicWindup=null;f.action=null;f.dash=null;f.pose=null;f.castRoot=0;f.castLock=0;f.dodgeGuard=null;f.dodgeRecovery=0;f.invul=0;f.hurt=0;f.moving=false;f.vx=0;f.vy=0;
   }
   requestSwitch(){
-    if(this.state!=='playing')return false;
+    if(this.state!=='playing'||this.player.blinkStrike)return false;
     if(this.switchCooldowns.player>0){this.hint(t('hints.switchCooldown',{sec:Math.ceil(this.switchCooldowns.player)}));return false;}
     if(!this.teams.player.some((f,i)=>i!==this.activeIndices.player&&f.hp>0)){this.hint(t('hints.noSwitchable'));return false;}
     this.state='switching';this.switchReason='manual';this.input={x:0,y:0};this.lastStepDt=0;this.emit('partyOpen',{forced:false});return true;
@@ -73,7 +74,7 @@ export class Battle {
   }
   switchFor(team,index){
     const f=this.source(team),forced=f.hp<=0;
-    if(this.options.mode!=='pvp'||this.state!=='playing'||!Number.isInteger(index)||index===this.activeIndices[team]||!this.teams[team][index]||this.teams[team][index].hp<=0||(!forced&&this.switchCooldowns[team]>0))return false;
+    if(this.options.mode!=='pvp'||this.state!=='playing'||f.blinkStrike||!Number.isInteger(index)||index===this.activeIndices[team]||!this.teams[team][index]||this.teams[team][index].hp<=0||(!forced&&this.switchCooldowns[team]>0))return false;
     this.sendOut(team,index,forced);this.pendingSwitch[team]=0;return true;
   }
   sendOut(team,index,forced=false){
@@ -127,7 +128,7 @@ export class Battle {
     if(count){if(f.team==='player')this.stats.trackingBreaks+=count;this.emit('trackingBreak',{team:f.team,x:f.x,y:f.y,count,color:'#9ee8ff'});}
   }
   tryBasic(f){
-    if(this.state!=='playing'||f.hp<=0||f.stun>0||(this.isCPU(f)&&f.action)||f.dash||f.dodgeRecovery>0||f.castRoot>0||f.castLock>0||f.basicWindup||f.basicTimer>0)return false;
+    if(this.state!=='playing'||f.hp<=0||f.stun>0||(this.isCPU(f)&&f.action)||f.dash||f.blinkStrike||f.dodgeRecovery>0||f.castRoot>0||f.castLock>0||f.basicWindup||f.basicTimer>0)return false;
     const target=this.target(f.team),basic=f.def.basic;
     if(distance(f,target)>basic.range)return false;
     const windup=this.isCPU(f)?Math.max(basic.windup,this.difficulty.basicWindup):basic.windup;
@@ -154,10 +155,11 @@ export class Battle {
   cast(key){return this.castFor(this.player,key);}
   castFor(f,key,{ai=false,direction=null}={}){
     ai=this.options.mode==='pvp'?false:(ai||f.team==='enemy');
-    const m=key==='s'?this.getTrainerSkill(f.team):f.def.moves[key],target=this.target(f.team);if(!m||this.state!=='playing'||f!==this.source(f.team)||f.hp<=0||(f.stun>0&&!['dodge','cleanse'].includes(m.kind))||(ai&&f.action))return false;
+    const m=key==='s'?this.getTrainerSkill(f.team):f.def.moves[key],target=this.target(f.team);if(!m||this.state!=='playing'||f!==this.source(f.team)||f.hp<=0||f.blinkStrike||(f.stun>0&&!['dodge','cleanse'].includes(m.kind))||(ai&&f.action))return false;
     if(f.cooldowns[key]>.01){if(!ai)this.hint(key==='r'?t('hints.switchCooldown',{sec:Math.ceil(f.cooldowns[key])}):t('battle.reuse',{sec:Math.ceil(f.cooldowns[key])}));return false;}
     if(f.mp<m.cost){if(!ai)this.hint(t('hints.noEnergy'));return false;}
     if(f.castLock>0&&['q','w','e','r'].includes(key))return false;
+    if(m.kind==='blinkStrike'&&(f.dash||target.hp<=0||distance(f,target)>m.range)){if(!ai)this.hint(t('hints.outOfRange'));return false;}
     if(m.kind==='trainerHeal'&&f.hp>=f.maxHp){if(!ai)this.hint(t('hints.fullHp'));return false;}
     if(m.trainer&&m.range&&distance(f,target)>m.range){if(!ai)this.hint(t('hints.outOfRange'));return false;}
     const aim=this.aim(f,m),angle=Math.atan2(aim.y-f.y,aim.x-f.x),dir={x:Math.cos(angle),y:Math.sin(angle)};
@@ -189,6 +191,16 @@ export class Battle {
       f.shield=Math.max(f.shield,m.shield);f.shieldTime=Math.max(f.shieldTime,m.duration);if(ai)this.commitEnemyAction(f,m.kind,key,.2);this.emit('shield',{x:f.x,y:f.y,value:m.shield,color:m.color});return true;
     }
     if(m.kind==='boost'){f.attackBoost=m.duration||5;f.attackMultiplier=m.attackMultiplier||1.4;if(ai)this.commitEnemyAction(f,m.kind,key,.2);this.emit('boost',{team:f.team,x:f.x,y:f.y,color:m.color,name:m.ko,duration:f.attackBoost});return true;}
+    if(m.kind==='blinkStrike'){
+      const warning=ai?this.difficulty.meleeWindup:.08;
+      f.castRoot=warning+m.duration;f.castLock=warning+m.duration;
+      this.animate(f,m.animation||'attack',warning+m.duration,warning+m.vanishTime);
+      if(ai){
+        this.commitEnemyAction(f,m.kind,key,warning,{sequence:m.duration,aim});
+        this.windups.push({createdAt:this.time,type:'melee',team:f.team,element:m.element,color:m.color,x:aim.x,y:aim.y,radius:m.strikeRange,life:warning,maxLife:warning});
+      }
+      this.schedule(warning,'blinkStrike',{team:f.team,m,aim:{...aim}});return true;
+    }
     if(m.kind==='dash'){
       let d=direction?unit(direction.x,direction.y):dir;
       if(!ai&&(this.inputFor(f).x||this.inputFor(f).y))d=unit(this.inputFor(f).x,this.inputFor(f).y);
@@ -249,7 +261,7 @@ export class Battle {
     const ts=this.getTrainerSkill(f.team);
     this.emit('trainer',{team:f.team,id:m.id,name:m.ko,displayName:ts.displayName,color:m.color,x:f.x,y:f.y,targetX:target.x,targetY:target.y});return true;
   }
-  aim(f,m){if(this.isCPU(f)&&this.options.difficulty==='master'&&this.masterAI.observed)return this.masterAim(m);const target=this.target(f.team);let lead=0;if(this.isCPU(f)){const timing=this.difficulty,speed=this.projectileSpeed(f,m.speed||650),warning=m.kind==='field'?timing.fieldWindup:['storm','beam','nova'].includes(m.kind)?timing.ultimateWindup:['dash','slash','pulse'].includes(m.kind)?timing.meleeWindup:m.kind?timing.reaction:timing.basicWindup;lead=clamp((warning*.65+distance(f,target)/Math.max(1,speed)*.55)*timing.lead,0,1.0);if(['storm','field','nova'].includes(m.kind))lead=warning*.8*timing.lead;}
+  aim(f,m){if(this.isCPU(f)&&this.options.difficulty==='master'&&this.masterAI.observed)return this.masterAim(m);const target=this.target(f.team);let lead=0;if(this.isCPU(f)){const timing=this.difficulty,speed=this.projectileSpeed(f,m.speed||650),warning=m.kind==='field'?timing.fieldWindup:['storm','beam','nova'].includes(m.kind)?timing.ultimateWindup:['dash','slash','pulse','blinkStrike'].includes(m.kind)?timing.meleeWindup:m.kind?timing.reaction:timing.basicWindup;lead=clamp((warning*.65+distance(f,target)/Math.max(1,speed)*.55)*timing.lead,0,1.0);if(['storm','field','nova'].includes(m.kind))lead=warning*.8*timing.lead;}
     return {x:clamp(target.x+target.vx*lead,BOUNDS.left+target.radius,BOUNDS.right-target.radius),y:clamp(target.y+target.vy*lead,BOUNDS.top+target.radius,BOUNDS.bottom-target.radius)};
   }
   addProjectile({type='orb',element='normal',color, x,y,dir,speed,damage,team,radius=11,life=1.8,homing=0,basic=false,burn=0,slow=0,group=null,maxHits=1,trackingBroken=false}){
@@ -259,6 +271,11 @@ export class Battle {
     if(f.stun>0){this.emit('interrupted',{x:f.x,y:f.y});return;}
     if(task.kind==='trainer'){if(!task.trackingBroken)this.applyTrainer(f,m);return;}
     const common={team:f.team,id:f.id,name:m.name,ko:m.ko,kind:m.kind,ultimate:!!m.ultimate,element:m.element,color:m.color,damage:m.damage,burn:m.burn||0,slow:m.slow||0};
+    if(task.kind==='blinkStrike'){
+      f.blinkStrike={origin:{x:f.x,y:f.y},aim:{...task.aim},elapsed:0,struck:false,returned:false,hidden:true,m:{...m}};
+      f.invul=Math.max(f.invul,m.vanishTime);
+      return;
+    }
     if(task.kind==='dash'){
       f.dash={dx:task.dx,dy:task.dy,time:m.distance/m.dashSpeed,speed:m.dashSpeed,damage:m.damage,hit:false,element:m.element,color:m.color,burn:m.burn||0};f.invul=m.phase?.2:.1;f.facing=Math.atan2(task.dy,task.dx);this.animate(f,m.animation||'charge',f.dash.time+.15,.08);this.pose(f,'strike',f.dash.time+.12,f.facing,1.1);return;
     }
@@ -276,7 +293,7 @@ export class Battle {
     if(task.kind==='fan'){
       const group=++this.groupId,count=m.count||5;
       for(let i=0;i<count;i++){const a=angle+(i-(count-1)/2)*(m.spread||.13),dir={x:Math.cos(a),y:Math.sin(a)};this.addProjectile({...common,type:m.element==='fire'?'fire':m.element==='grass'?'leaf':'orb',x:f.x+dir.x*24,y:f.y+dir.y*24,dir,speed,damage:m.damage,radius:12,life:1.6,group,maxHits:3});}
-    }else{const dir={x:Math.cos(angle),y:Math.sin(angle)};this.addProjectile({...common,type:m.element==='rock'?'rock':m.element==='electric'?'bolt':'orb',x:f.x+dir.x*23,y:f.y+dir.y*23,dir,speed,damage:m.damage,radius:m.kind==='bolt'?15:12,life:1.7,homing:task.trackingBroken?0:m.homing||0,trackingBroken:!!task.trackingBroken});}
+    }else{const dir={x:Math.cos(angle),y:Math.sin(angle)};this.addProjectile({...common,type:m.projectileType||(m.element==='rock'?'rock':m.element==='electric'?'bolt':'orb'),x:f.x+dir.x*23,y:f.y+dir.y*23,dir,speed,damage:m.damage,radius:m.kind==='bolt'?15:12,life:1.7,homing:task.trackingBroken?0:m.homing||0,trackingBroken:!!task.trackingBroken});}
     this.emit('fieldAttack',{...common,x:f.x,y:f.y,r:20,angle});
   }
   damage(who,amount,team,{stun=0,burn=0,slow=0,basic=false,element='normal',color,lifesteal=0,periodic=false,fixed=false}={}){
@@ -297,7 +314,7 @@ export class Battle {
     if(lifesteal){const source=this.source(team),gain=Math.min(source.maxHp-source.hp,Math.round(dealt*lifesteal));source.hp+=gain;if(gain)this.emit('heal',{x:source.x,y:source.y,value:gain});}
     if(who.hp<=0)this.faint(who);return true;
   }
-  finish(won){this.pendingSwitch={player:0,enemy:0};this.state=won?'won':'lost';this.hitStop=0;this.switchReason=null;this.transition=null;for(const f of [...this.teams.player,...this.teams.enemy]){f.hurt=0;f.invul=0;f.action=null;f.dodgeGuard=null;f.stun=0;f.burn=0;f.slow=0;f.boost=0;f.haste=0;f.weakened=0;f.cleanseGuard=0;f.ignite=null;f.attackBoost=0;f.shield=0;f.dash=null;f.pose=null;f.dodgeRecovery=0;f.moving=false;f.basicWindup=null;this.animate(f,f.hp<=0?'faint':'idle',99);}this.projectiles=[];this.hazards=[];this.windups=[];this.tasks=[];this.emit('end',{won,stats:{...this.stats},rivalStats:{...this.rivalStats},time:this.time});}
+  finish(won){this.pendingSwitch={player:0,enemy:0};this.state=won?'won':'lost';this.hitStop=0;this.switchReason=null;this.transition=null;for(const f of [...this.teams.player,...this.teams.enemy]){this.returnBlink(f);f.hurt=0;f.invul=0;f.action=null;f.dodgeGuard=null;f.stun=0;f.burn=0;f.slow=0;f.boost=0;f.haste=0;f.weakened=0;f.cleanseGuard=0;f.ignite=null;f.attackBoost=0;f.shield=0;f.dash=null;f.pose=null;f.dodgeRecovery=0;f.moving=false;f.basicWindup=null;this.animate(f,f.hp<=0?'faint':'idle',99);}this.projectiles=[];this.hazards=[];this.windups=[];this.tasks=[];this.emit('end',{won,stats:{...this.stats},rivalStats:{...this.rivalStats},time:this.time});}
   update(dt,input={x:0,y:0},enemyInput={x:0,y:0}){
     dt=clamp(dt,0,.05);this.lastStepDt=0;this.input={x:input.x||0,y:input.y||0};
     this.inputs={player:this.input,enemy:{x:enemyInput.x||0,y:enemyInput.y||0}};
@@ -338,20 +355,21 @@ export class Battle {
     if(this.state!=='playing')return;
     const p=this.player,e=this.enemy,moving=this.input.x||this.input.y;
     // Basic attacks are always automatic and never take over or slow the player's movement.
-    if(p.dash)this.moveDash(p,dt,e);
+    if(p.blinkStrike)this.updateBlink(p,dt,e);else if(p.dash)this.moveDash(p,dt,e);
     else if(p.hp>0&&p.stun===0&&p.castRoot===0&&p.dodgeRecovery===0){
       if(moving)this.move(p,unit(this.input.x,this.input.y),dt);
     }
     if(p.basicWindup)p.facing=Math.atan2(e.y-p.y,e.x-p.x);
     p.vx=p.vx*.35+(p.x-p.px)/Math.max(.001,dt)*.65;p.vy=p.vy*.35+(p.y-p.py)/Math.max(.001,dt)*.65;
-    if(this.options.mode==='pvp'){
+    if(e.blinkStrike)this.updateBlink(e,dt,p);
+    else if(this.options.mode==='pvp'){
       const control=this.inputs.enemy;
       if(e.dash)this.moveDash(e,dt,p);else if(e.hp>0&&e.stun===0&&e.castRoot===0&&e.dodgeRecovery===0&&(control.x||control.y))this.move(e,unit(control.x,control.y),dt);
       if(e.basicWindup)e.facing=Math.atan2(p.y-e.y,p.x-e.x);
     }else this.updateAI(dt);
     e.vx=e.vx*.35+(e.x-e.px)/Math.max(.001,dt)*.65;e.vy=e.vy*.35+(e.y-e.py)/Math.max(.001,dt)*.65;
     const sep=distance(p,e),min=p.radius+e.radius;
-    if(sep<min&&p.hp>0&&e.hp>0&&!p.dash&&!e.dash){const n=sep<.001?{x:-1,y:0}:unit(p.x-e.x,p.y-e.y);this.place(p,p.x+n.x*(min-sep)*(this.options.mode==='pvp'?.5:.55),p.y+n.y*(min-sep)*(this.options.mode==='pvp'?.5:.55));this.place(e,e.x-n.x*(min-sep)*(this.options.mode==='pvp'?.5:.45),e.y-n.y*(min-sep)*(this.options.mode==='pvp'?.5:.45));}
+    if(sep<min&&p.hp>0&&e.hp>0&&!p.dash&&!e.dash&&!p.blinkStrike&&!e.blinkStrike){const n=sep<.001?{x:-1,y:0}:unit(p.x-e.x,p.y-e.y);this.place(p,p.x+n.x*(min-sep)*(this.options.mode==='pvp'?.5:.55),p.y+n.y*(min-sep)*(this.options.mode==='pvp'?.5:.55));this.place(e,e.x-n.x*(min-sep)*(this.options.mode==='pvp'?.5:.45),e.y-n.y*(min-sep)*(this.options.mode==='pvp'?.5:.45));}
     this.tryBasic(p);if(this.options.mode==='pvp')this.tryBasic(e);
     for(const f of [p,e]){
       if(f.basicWindup){if(f.stun>0){f.basicWindup=null;this.windups=this.windups.filter(w=>!(w.team===f.team&&w.basic));}else if(f.basicWindup.startedAt!==this.time){f.basicWindup.time-=dt;if(f.basicWindup.time<=.000001)this.fireBasic(f);}}
@@ -363,6 +381,31 @@ export class Battle {
     this.updateProjectiles(dt);
     if(this.state==='playing')this.updateHazards(dt);
     if(this.hitGroups.size>250)this.hitGroups.clear();
+  }
+  returnBlink(f){
+    if(!f.blinkStrike)return;
+    const origin=f.blinkStrike.origin;this.place(f,origin.x,origin.y);f.px=f.x;f.py=f.y;f.blinkStrike=null;
+  }
+  updateBlink(f,dt,target){
+    const blink=f.blinkStrike,m=blink.m;blink.elapsed+=dt;f.moving=false;
+    if(!blink.struck&&blink.elapsed>=m.vanishTime){
+      blink.struck=true;blink.hidden=false;
+      const from={x:f.x,y:f.y},direction=unit(blink.origin.x-blink.aim.x||-1,blink.origin.y-blink.aim.y),offset=f.radius+target.radius+8;
+      this.place(f,blink.aim.x+direction.x*offset,blink.aim.y+direction.y*offset);
+      f.px=f.x;f.py=f.y;f.vx=0;f.vy=0;f.facing=Math.atan2(blink.aim.y-f.y,blink.aim.x-f.x);
+      this.emit('blink',{team:f.team,from,to:{x:f.x,y:f.y},color:m.color});
+      this.emit('slash',{team:f.team,id:f.id,name:m.name,ko:m.ko,kind:m.kind,element:m.element,color:m.color,damage:m.damage,x:f.x,y:f.y,angle:f.facing,r:m.strikeRange});
+      if(target.hp>0&&distance(f,target)<m.strikeRange+target.radius*.35)this.damage(target,m.damage,f.team,{element:m.element,color:m.color});
+      if(this.state!=='playing'){this.returnBlink(f);return;}
+      if(!f.blinkStrike)return;
+    }
+    if(!blink.returned&&blink.elapsed>=m.returnAt){
+      const from={x:f.x,y:f.y};blink.returned=true;blink.hidden=true;
+      this.place(f,blink.origin.x,blink.origin.y);f.px=f.x;f.py=f.y;f.vx=0;f.vy=0;
+      f.invul=Math.max(f.invul,m.duration-blink.elapsed);
+      this.emit('blink',{team:f.team,from,to:{x:f.x,y:f.y},color:m.color});
+    }
+    if(blink.elapsed>=m.duration)this.returnBlink(f);
   }
   move(f,dir,dt,mult=1){f.moving=true;f.facing=Math.atan2(dir.y,dir.x);const speed=f.speed*(f.boost>0?1.24:1)*(f.haste>0?f.hasteMultiplier:1)*(f.slow>0?.68:1)*mult;this.place(f,f.x+dir.x*speed*dt,f.y+dir.y*speed*dt);}
   moveDash(f,dt,target){const d=f.dash,old={x:f.x,y:f.y},step=Math.min(dt,d.time);
@@ -425,7 +468,7 @@ export class Battle {
   }
   masterAim(m){
     const e=this.enemy,t=this.difficulty;
-    const warning=m.kind==='field'?t.fieldWindup:['storm','nova'].includes(m.kind)?t.ultimateWindup:m.kind==='beam'?Math.max(t.ultimateWindup,m.charge||.6):['dash','slash','pulse'].includes(m.kind)?t.meleeWindup:m.kind?t.reaction:Math.max(e.def.basic.windup,t.basicWindup);
+    const warning=m.kind==='field'?t.fieldWindup:['storm','nova'].includes(m.kind)?t.ultimateWindup:m.kind==='beam'?Math.max(t.ultimateWindup,m.charge||.6):['dash','slash','pulse','blinkStrike'].includes(m.kind)?t.meleeWindup:m.kind?t.reaction:Math.max(e.def.basic.windup,t.basicWindup);
     let horizon=warning;
     if(!m.kind||['bolt','volley','fan'].includes(m.kind)){
       const speed=this.projectileSpeed(e,m.speed||e.def.basic.projectileSpeed||650);
@@ -485,7 +528,8 @@ export class Battle {
           const dir=unit(aim.x-e.x,aim.y-e.y),end={x:clamp(e.x+dir.x*m.distance,BOUNDS.left+e.radius,BOUNDS.right-e.radius),y:clamp(e.y+dir.y*m.distance,BOUNDS.top+e.radius,BOUNDS.bottom-e.radius),radius:e.radius};
           if(this.masterDanger(end,.65)===0)value=(e.def.basic.melee?90:42)+(punish?25:0);
         }
-      }else if(['slash','pulse'].includes(m.kind)){if(future<m.range+this.player.radius*.2)value=70+(punish?30:0);}
+      }else if(m.kind==='blinkStrike'){if(d<=m.range&&future<=m.range)value=90+(punish?30:0);}
+      else if(['slash','pulse'].includes(m.kind)){if(future<m.range+this.player.radius*.2)value=70+(punish?30:0);}
       else if(m.kind==='nova'&&e.def.basic.melee){if(Math.hypot(aim.x-e.x,(aim.y-e.y)/.7)<m.radius*.88)value=145+(punish?30:0);}
       else if(['field','storm','nova'].includes(m.kind)){if(d<690)value=(key==='r'?135:75)+(punish?35:0);}
       else if(m.kind==='beam'){if(future<(m.range||820))value=125+(punish?30:0);}
@@ -547,7 +591,7 @@ export class Battle {
       else if(moves.w.kind==='dash'&&e.cooldowns.w===0&&d>(e.def.basic.melee?150:300)&&d<620)key='w';
       else if(moves.w.kind==='field'&&e.cooldowns.w===0&&d<660)key='w';
       else if(['slash','pulse'].includes(moves.w.kind)&&e.cooldowns.w===0&&d<moves.w.range+15)key='w';
-      else if(e.cooldowns.e===0&&d<(['slash','pulse'].includes(moves.e.kind)?moves.e.range+15:660))key='e';
+      else if(e.cooldowns.e===0&&d<(['slash','pulse'].includes(moves.e.kind)?moves.e.range+15:moves.e.kind==='blinkStrike'?moves.e.range:660))key='e';
       else if(e.cooldowns.q===0&&d<(['slash','pulse'].includes(moves.q.kind)?moves.q.range+15:moves.q.kind==='dash'?340:760))key='q';
       if(key&&e.mp>=moves[key].cost){this.castFor(e,key,{ai:true});this.aiComboTimer=.32;}
     }

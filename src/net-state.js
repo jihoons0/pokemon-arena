@@ -1,10 +1,11 @@
 import {Battle, BOUNDS, clamp, unit} from './battle.js';
 
-export const PROTOCOL = 1;
+// Yuna adds blink-strike state and a new roster ID; older clients must refresh.
+export const PROTOCOL = 2;
 export const STEP = 1 / 60;
 export const SNAPSHOT_MS = 50;
 export const SIDES = ['player', 'enemy'];
-const FIELDS = ('id x y px py vx vy hp maxHp mp maxMp speed radius facing anim animTime animLock animDuration animHitAt pose dodgeRecovery dodgeGuard action castRoot castLock invul hurt stun burn burnTick slow boost haste hasteMultiplier weakened cleanseGuard ignite attackBoost attackMultiplier fainted shield shieldTime moving dash basicTimer basicWindup cooldowns index').split(' ');
+const FIELDS = ('id x y px py vx vy hp maxHp mp maxMp speed radius facing anim animTime animLock animDuration animHitAt pose dodgeRecovery dodgeGuard action castRoot castLock invul hurt stun burn burnTick slow boost haste hasteMultiplier weakened cleanseGuard ignite attackBoost attackMultiplier fainted shield shieldTime moving dash blinkStrike basicTimer basicWindup cooldowns index').split(' ');
 const round = n => Math.round(n * 1000) / 1000;
 const clean = value => typeof value === 'number' ? round(value) : value;
 export const opposite = side => side === 'player' ? 'enemy' : 'player';
@@ -90,7 +91,7 @@ export function predictMotion(f, dt, control, target) {
   for (const key of ['stun','castRoot','castLock','dodgeRecovery','invul','haste','slow','boost','animLock']) f[key] = Math.max(0, f[key]-dt);
   if (f.cooldowns) for (const key of Object.keys(f.cooldowns)) f.cooldowns[key] = Math.max(0, f.cooldowns[key]-dt);
   f.animTime += dt; f.moving = false;
-  if (f.hp <= 0) return;
+  if (f.hp <= 0 || f.blinkStrike) return;
   const place = (x,y) => { f.x=clamp(x,BOUNDS.left+f.radius,BOUNDS.right-f.radius);f.y=clamp(y,BOUNDS.top+f.radius,BOUNDS.bottom-f.radius); };
   if (f.dash) {
     const d=f.dash, step=Math.min(dt,d.time);

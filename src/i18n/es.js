@@ -1,5 +1,25 @@
 // src/i18n/es.js — Traducción al español (Spanish)
 export default {
+  guestMoves: {
+    "yuna": {
+      "q": {
+        "name": "Vómito",
+        "description": "Escupe un proyectil de vómito al rival. Ralentiza brevemente al impactar."
+      },
+      "w": {
+        "name": "Arañazo",
+        "description": "Araña a un rival cercano, causando daño y un breve aturdimiento."
+      },
+      "e": {
+        "name": "Ataque rápido",
+        "description": "Desaparece, golpea una vez junto al rival a un máximo de {range} de alcance y vuelve al punto de partida. Alejarse de la posición fijada permite esquivar el golpe."
+      },
+      "r": {
+        "name": "Hiperrayo",
+        "description": "Carga durante {charge}s y dispara un rayo de alcance {range} en la dirección fijada al iniciar la habilidad."
+      }
+    }
+  },
   _meta: { code: 'es', name: 'Español', dir: 'ltr' },
 
   // ─── Header / Chrome ────────────────────────────────────────
@@ -25,6 +45,7 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    guestCharacter: "INVITADA",
     title: 'Selección de Pokémon',
     speciesCount: ({n}) => `${n} especies disponibles`,
     solo: 'Un jugador',
@@ -310,6 +331,7 @@ export default {
 
   // ─── Pokémon Names ──────────────────────────────────────────
   pokemon: {
+    yuna: "Yuna",
     pikachu: 'Pikachu', charizard: 'Charizard', eevee: 'Eevee',
     mewtwo: 'Mewtwo', gengar: 'Gengar', snorlax: 'Snorlax',
     dragonite: 'Dragonite', blastoise: 'Blastoise', venusaur: 'Venusaur',
@@ -331,6 +353,7 @@ export default {
 
   // ─── Pokémon Roles ──────────────────────────────────────────
   roles: {
+    yuna: "Siamesa emboscadora",
     pikachu: 'Tirador a distancia', charizard: 'Mago de área', eevee: 'Luchador adaptable',
     mewtwo: 'Tirador psíquico', gengar: 'Mago saboteador', snorlax: 'Tanque defensivo',
     dragonite: 'Coloso de asalto', blastoise: 'Tanque artillero', venusaur: 'Control de área',
@@ -352,6 +375,7 @@ export default {
 
   // ─── Pokémon Taglines ───────────────────────────────────────
   taglines: {
+    yuna: "Hostiga con vómito, golpea por sorpresa y vuelve al punto de partida.",
     pikachu: 'Presiona sin descanso con veloces ataques y chispas eléctricas.',
     charizard: 'Calcina zonas enteras con fuego y bloquea rutas de escape.',
     eevee: 'Equilibra proyectiles teledirigidos, mejoras y arremetidas valientes.',
@@ -406,6 +430,7 @@ export default {
 
   // ─── Basic attack names ─────────────────────────────────────
   basics: {
+    yuna: "Toque de pata",
     pikachu: 'Impactrueno', charizard: 'Lanzallamas', eevee: 'Rapidez',
     mewtwo: 'Confusión', gengar: 'Bola Sombra', snorlax: 'Megapuño',
     dragonite: 'Golpe Dragón', blastoise: 'Pistola Agua', venusaur: 'Látigo Cepa',

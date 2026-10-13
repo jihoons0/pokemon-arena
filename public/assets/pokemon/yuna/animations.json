@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 1,
+  "pokemon": {
+    "dex": null,
+    "name": "Yuna",
+    "slug": "yuna",
+    "custom": true
+  },
+  "source": {
+    "name": "Original Yuna artwork",
+    "generator": "OpenAI image generation",
+    "rawCredits": "/assets/pokemon/yuna/sprite/credits.txt",
+    "note": "AI-assisted pixel artwork based on user-provided photographs of Yuna. Not a Pokémon or a PMD SpriteCollab asset."
+  },
+  "timing": {
+    "unit": "frames",
+    "framesPerSecond": 60
+  },
+  "layout": {
+    "frameOrder": "left-to-right",
+    "directionOrder": "top-to-bottom",
+    "directions": [
+      "down",
+      "downRight",
+      "right",
+      "upRight",
+      "up",
+      "upLeft",
+      "left",
+      "downLeft"
+    ],
+    "transparentBackground": true
+  },
+  "rendering": {
+    "nativeScale": 1,
+    "preferredScale": 1.75,
+    "interpolation": "nearest-neighbor"
+  },
+  "portrait": {
+    "normal": {
+      "url": "/assets/pokemon/yuna/portrait/Normal.png",
+      "width": 96,
+      "height": 96,
+      "sha256": "92e102d6e0ed0d2c1b61024469b83b25e082ffeb0a8494b50130c11015f6dcfa"
+    },
+    "rawCredits": "/assets/pokemon/yuna/portrait/credits.txt"
+  },
+  "animations": {
+    "idle": {
+      "name": "idle",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 2,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 128,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        18,
+        18
+      ],
+      "durationsMs": [
+        300,
+        300
+      ],
+      "loop": true,
+      "image": "/assets/pokemon/yuna/sprite/idle-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/idle-Shadow.png",
+      "sha256": {
+        "image": "88e52f90434a083a853ec9a4851ddea8bcb2ba23f793edb47123a96e85fa78f5",
+        "shadow": "d75b3c9008feacb994299d8f5643047a42739f7d49ec620072704cff7b8975e3"
+      }
+    },
+    "walk": {
+      "name": "walk",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 4,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 256,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        7,
+        7,
+        7,
+        7
+      ],
+      "durationsMs": [
+        117,
+        117,
+        117,
+        117
+      ],
+      "loop": true,
+      "image": "/assets/pokemon/yuna/sprite/walk-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/walk-Shadow.png",
+      "sha256": {
+        "image": "d4bfe31e0b576d7db377c0a637509dab8a5863df2178dd3f4e5708cca59a6767",
+        "shadow": "56d46258fff02ae659e49a0a64d6f13d6fb31ec079668253f27cab510041a089"
+      }
+    },
+    "attack": {
+      "name": "attack",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 4,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 256,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "durationsMs": [
+        133,
+        133,
+        133,
+        133
+      ],
+      "loop": false,
+      "image": "/assets/pokemon/yuna/sprite/attack-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/attack-Shadow.png",
+      "sha256": {
+        "image": "5a2f96eac1bc103c90c91baa48b00f6104b141cd194eca6e24a0b4d10d18ec93",
+        "shadow": "56d46258fff02ae659e49a0a64d6f13d6fb31ec079668253f27cab510041a089"
+      },
+      "rushFrame": 0,
+      "hitFrame": 1,
+      "returnFrame": 2
+    },
+    "shoot": {
+      "name": "shoot",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 3,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 192,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        8,
+        8,
+        8
+      ],
+      "durationsMs": [
+        133,
+        133,
+        133
+      ],
+      "loop": false,
+      "image": "/assets/pokemon/yuna/sprite/shoot-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/shoot-Shadow.png",
+      "sha256": {
+        "image": "0fee770d7d0b274776958dee44982b3a14495e1a1e9176c6d0cad60fda7f120f",
+        "shadow": "413a0a5d10c971289191018f250457d8784282ea0036647b0d81e690e7b2514b"
+      }
+    },
+    "charge": {
+      "name": "charge",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 3,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 192,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        8,
+        8,
+        8
+      ],
+      "durationsMs": [
+        133,
+        133,
+        133
+      ],
+      "loop": false,
+      "image": "/assets/pokemon/yuna/sprite/charge-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/charge-Shadow.png",
+      "sha256": {
+        "image": "1239ccba731613e5047d8ea4f9cc152b90aad9be36435b30539bd5accc236ff6",
+        "shadow": "413a0a5d10c971289191018f250457d8784282ea0036647b0d81e690e7b2514b"
+      }
+    },
+    "quickstrike": {
+      "name": "quickstrike",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 3,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 192,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        8,
+        8,
+        8
+      ],
+      "durationsMs": [
+        133,
+        133,
+        133
+      ],
+      "loop": false,
+      "image": "/assets/pokemon/yuna/sprite/quickstrike-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/quickstrike-Shadow.png",
+      "sha256": {
+        "image": "0c94f366af9222d7c209279a2958ec73d3f2c033df9f26ed9ae676d7808fc73c",
+        "shadow": "413a0a5d10c971289191018f250457d8784282ea0036647b0d81e690e7b2514b"
+      },
+      "rushFrame": 0,
+      "hitFrame": 1,
+      "returnFrame": 2
+    },
+    "hurt": {
+      "name": "hurt",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 3,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 192,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        8,
+        8,
+        8
+      ],
+      "durationsMs": [
+        133,
+        133,
+        133
+      ],
+      "loop": false,
+      "image": "/assets/pokemon/yuna/sprite/hurt-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/hurt-Shadow.png",
+      "sha256": {
+        "image": "442751e5341081849200a39c6318ed8dbd70c8f75fe95fd99df84d657497fa61",
+        "shadow": "413a0a5d10c971289191018f250457d8784282ea0036647b0d81e690e7b2514b"
+      }
+    },
+    "faint": {
+      "name": "faint",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 1,
+      "directionCount": 8,
+      "directions": [
+        "down",
+        "downRight",
+        "right",
+        "upRight",
+        "up",
+        "upLeft",
+        "left",
+        "downLeft"
+      ],
+      "sheetWidth": 64,
+      "sheetHeight": 512,
+      "durationsFrames": [
+        8
+      ],
+      "durationsMs": [
+        133
+      ],
+      "loop": false,
+      "image": "/assets/pokemon/yuna/sprite/faint-Anim.png",
+      "shadowImage": "/assets/pokemon/yuna/sprite/faint-Shadow.png",
+      "sha256": {
+        "image": "781ea41d8bf059c003f0c2a0c7f596d63fe20ff72a65e335654a811c6c88c876",
+        "shadow": "2c94d1abd669304ac9beb797fe11590d6729409cb8e3208d5744923d6652f0f1"
+      }
+    }
+  }
+}

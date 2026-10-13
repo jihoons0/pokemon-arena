@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {Battle} from '../src/battle.js';
 import {ROSTER} from '../src/roster.js';
 import {Match,validParty} from '../server/match.js';
-import {encodeBattle,applyBattleState,checkpointBattle,restoreBattle,STEP,predictMotion} from '../src/net-state.js';
+import {PROTOCOL,encodeBattle,applyBattleState,checkpointBattle,restoreBattle,STEP,predictMotion} from '../src/net-state.js';
 const team=ROSTER.slice(0,6).map(m=>m.id);
 function setup(){
   let time=100000;const messages=[[],[]];const match=new Match({now:()=>time,send:(seat,m)=>messages[seat].push(structuredClone(m))});
-  for(let seat=0;seat<2;seat++){match.connect({v:1,newToken:'token'+seat,team,special:'haste'});match.welcome(seat);match.receive(seat,{type:'ready'});}
+  for(let seat=0;seat<2;seat++){match.connect({v:PROTOCOL,newToken:'token'+seat,team,special:'haste'});match.welcome(seat);match.receive(seat,{type:'ready'});}
   for(let seat=0;seat<2;seat++)match.receive(seat,{type:'loaded',game:match.game});
   function advance(seconds){for(let t=0;t<seconds-.000001;t+=STEP){time+=STEP*1000;match.advance(STEP);}}
   const seq=[0,0],action=[0,0];
@@ -15,7 +15,7 @@ function setup(){
   advance(3.1);return {match,messages,advance,send,now:()=>time};
 }
 test('two parties must load before the authoritative three-second start',()=>{
-  const match=new Match();for(let i=0;i<2;i++){match.connect({v:1,newToken:String(i),team,special:'haste'});match.receive(i,{type:'ready'});}
+  const match=new Match();for(let i=0;i<2;i++){match.connect({v:PROTOCOL,newToken:String(i),team,special:'haste'});match.receive(i,{type:'ready'});}
   assert.equal(match.phase,'loading');match.receive(0,{type:'loaded',game:match.game});assert.equal(match.battle,null);
   match.receive(1,{type:'loaded',game:match.game});assert.equal(match.battle.state,'countdown');assert.equal(match.battle.countdown,3);
 });
@@ -68,8 +68,8 @@ test('pause requests cannot extend the deadline and casts cannot damage a paused
   send(1,[{kind:'pause'},{kind:'cast',key:'q'}]);assert.equal(match.pauseInfo.until,until);assert.equal(match.battle.tasks.length,0);
 });
 test('resume token claims only its own seat; third player and forged credentials fail',()=>{
-  const {match}=setup();assert.throws(()=>match.connect({v:1,newToken:'third',team,special:'haste'}));
-  assert.throws(()=>match.connect({v:1,token:'wrong'}));match.disconnect(1);assert.equal(match.connect({v:1,token:'token1'}).seat,1);
+  const {match}=setup();assert.throws(()=>match.connect({v:PROTOCOL,newToken:'third',team,special:'haste'}));
+  assert.throws(()=>match.connect({v:PROTOCOL,token:'wrong'}));match.disconnect(1);assert.equal(match.connect({v:PROTOCOL,token:'token1'}).seat,1);
 });
 test('disconnection stops movement and allows 30 seconds to reconnect before loss',()=>{
   const {match,send,advance}=setup();send(1,[],1,0);match.disconnect(1);const x=match.battle.enemy.x;advance(1);assert.equal(match.battle.enemy.x,x);

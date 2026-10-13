@@ -1,0 +1,5 @@
+Yuna: original guest character, a real Siamese cat.
+Reference photographs: supplied by Yuna’s owner for this contribution.
+Portrait and directional sprite art: generated with OpenAI image generation from those references.
+Sprite frames: packed from the generated directional pose atlas.
+This artwork is not from Pokémon, CHUNSOFT, or PMD SpriteCollab.

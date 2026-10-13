@@ -17,7 +17,7 @@ test('six original trainer choices have distinct real icon assets, including bat
 test('all fifty Pokémon have an actual locally bundled Ogg cry and source attribution',()=>{
   const metadata=JSON.parse(readFileSync(resolve(root,'assets/audio/cries/credits.json'),'utf8'));
   assert.equal(metadata.assets.length,50);
-  for(const mon of ROSTER){const bytes=readFileSync(resolve(root,`assets/audio/cries/${mon.dex}.ogg`));assert.equal(bytes.toString('ascii',0,4),'OggS');assert.ok(bytes.length>500);const entry=metadata.assets.find(item=>item.id===mon.id);assert.equal(entry.dex,mon.dex);assert.ok(entry.sourceUrl.startsWith('https://raw.githubusercontent.com/PokeAPI/cries/'));}
+  for(const mon of ROSTER.filter(mon=>!mon.custom)){const bytes=readFileSync(resolve(root,`assets/audio/cries/${mon.dex}.ogg`));assert.equal(bytes.toString('ascii',0,4),'OggS');assert.ok(bytes.length>500);const entry=metadata.assets.find(item=>item.id===mon.id);assert.equal(entry.dex,mon.dex);assert.ok(entry.sourceUrl.startsWith('https://raw.githubusercontent.com/PokeAPI/cries/'));}
 });
 test('ordinary skills as well as ultimates have restrained tactile feedback plans',()=>{
   for(const kind of ['bolt','fan','volley','slash','dash','guard','boost','pulse','field','beam'])for(const cue of ['cast','release']){const spec=hapticForCue(cue,{kind});assert.ok(spec);assert.ok(spec.pattern.reduce((sum,n)=>sum+n,0)<=50);assert.ok(spec.strong<=.4);}

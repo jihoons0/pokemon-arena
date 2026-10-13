@@ -1,5 +1,25 @@
 // src/i18n/ja.js — 日本語翻訳 (Japanese)
 export default {
+  guestMoves: {
+    "yuna": {
+      "q": {
+        "name": "吐き出す",
+        "description": "相手に吐いたものを飛ばします。命中すると短時間移動速度を下げます。"
+      },
+      "w": {
+        "name": "ひっかく",
+        "description": "近くの相手をひっかき、ダメージと短いひるみを与えます。"
+      },
+      "e": {
+        "name": "でんこうせっか",
+        "description": "姿を消して射程{range}以内の相手のそばを一度攻撃し、元の位置へ戻ります。狙われた位置から離れると回避できます。"
+      },
+      "r": {
+        "name": "はかいこうせん",
+        "description": "{charge}秒間ためてから、発動時に固定した方向へ射程{range}の光線を放ちます。"
+      }
+    }
+  },
   _meta: { code: 'ja', name: '日本語', dir: 'ltr' },
 
   // ─── Header / Chrome ────────────────────────────────────────
@@ -25,6 +45,7 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    guestCharacter: "ゲスト",
     title: 'ポケモン選択',
     speciesCount: ({n}) => `${n}匹 参戦可能`,
     solo: 'ひとりで遊ぶ',
@@ -310,6 +331,7 @@ export default {
 
   // ─── Pokémon Names ──────────────────────────────────────────
   pokemon: {
+    yuna: "ユナ",
     pikachu: 'ピカチュウ', charizard: 'リザードン', eevee: 'イーブイ',
     mewtwo: 'ミュウツー', gengar: 'ゲンガー', snorlax: 'カビゴン',
     dragonite: 'カイリュー', blastoise: 'カメックス', venusaur: 'フシギバナ',
@@ -331,6 +353,7 @@ export default {
 
   // ─── Pokémon Roles ──────────────────────────────────────────
   roles: {
+    yuna: "シャム猫の奇襲役",
     pikachu: '遠距離キャリー', charizard: '範囲メイジ', eevee: '適応型ファイター',
     mewtwo: 'サイキックキャリー', gengar: '妨害メイジ', snorlax: '防御型タンク',
     dragonite: '突進型ブルーザー', blastoise: '砲撃型タンク', venusaur: 'エリア制圧',
@@ -352,6 +375,7 @@ export default {
 
   // ─── Pokémon Taglines ───────────────────────────────────────
   taglines: {
+    yuna: "吐き出して牽制し、一撃を加えて元の位置に戻ります。",
     pikachu: '素早い通常攻撃と電撃で絶え間なく圧力をかけます。',
     charizard: '炎で空間を焼き払い、逃げ道を遮断します。',
     eevee: '誘導弾、自己強化、果敢な突進をバランスよく使いこなします。',
@@ -406,6 +430,7 @@ export default {
 
   // ─── Basic attack names ─────────────────────────────────────
   basics: {
+    yuna: "前足パンチ",
     pikachu: 'でんきショック', charizard: 'ひのたま', eevee: 'スピードスター',
     mewtwo: 'ねんりき', gengar: 'シャドーボール', snorlax: 'メガトンパンチ',
     dragonite: 'ドラゴンアタック', blastoise: 'みずでっぽう', venusaur: 'つるのムチ',

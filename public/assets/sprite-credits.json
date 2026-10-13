@@ -1674,6 +1674,22 @@
         }
       ],
       "suggestedDisplayCredit": "Aerodactyl sprites/portrait: CHUNSOFT, via PMD SpriteCollab. See bundled per-file credit records and recorded licenses."
+    },
+    "yuna": {
+      "dex": null,
+      "custom": true,
+      "manifest": "/assets/pokemon/yuna/animations.json",
+      "spriteCreditRecords": "/assets/pokemon/yuna/sprite/credits.txt",
+      "portraitCreditRecords": "/assets/pokemon/yuna/portrait/credits.txt",
+      "credits": [
+        {
+          "creator": "Yuna’s owner (reference photographs)"
+        },
+        {
+          "creator": "OpenAI image generation (original pixel art)"
+        }
+      ],
+      "suggestedDisplayCredit": "Yuna: original guest character; AI-assisted artwork from owner-provided photographs. Not from PMD SpriteCollab."
     }
   }
 }

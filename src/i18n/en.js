@@ -1,5 +1,25 @@
 // src/i18n/en.js — English translations
 export default {
+  guestMoves: {
+    "yuna": {
+      "q": {
+        "name": "Spit Vomit",
+        "description": "Spits a vomit projectile at the opponent. Briefly slows on contact."
+      },
+      "w": {
+        "name": "Claw Swipe",
+        "description": "Claws a nearby opponent, dealing damage and briefly stunning them."
+      },
+      "e": {
+        "name": "Quick Attack",
+        "description": "Vanishes, strikes once beside the opponent within {range} range, then returns to the starting position. Moving away from the targeted position can evade the strike."
+      },
+      "r": {
+        "name": "Hyper Beam",
+        "description": "Charges for {charge}s, then fires a beam up to {range} range in the direction locked at the start of the cast."
+      }
+    }
+  },
   _meta: { code: 'en', name: 'English', dir: 'ltr' },
 
   // ─── Header / Chrome ────────────────────────────────────────
@@ -25,6 +45,7 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    guestCharacter: "GUEST",
     title: 'Select Pokémon',
     speciesCount: ({n}) => `${n} species available`,
     solo: 'Single Player',
@@ -310,6 +331,7 @@ export default {
 
   // ─── Pokémon Names ──────────────────────────────────────────
   pokemon: {
+    yuna: "Yuna",
     pikachu: 'Pikachu', charizard: 'Charizard', eevee: 'Eevee',
     mewtwo: 'Mewtwo', gengar: 'Gengar', snorlax: 'Snorlax',
     dragonite: 'Dragonite', blastoise: 'Blastoise', venusaur: 'Venusaur',
@@ -331,6 +353,7 @@ export default {
 
   // ─── Pokémon Roles ──────────────────────────────────────────
   roles: {
+    yuna: "Siamese Ambusher",
     pikachu: 'Ranged Carry', charizard: 'AoE Mage', eevee: 'Adaptive Skirmisher',
     mewtwo: 'Psychic Carry', gengar: 'Disruptor Mage', snorlax: 'Defensive Tank',
     dragonite: 'Dive Bruiser', blastoise: 'Artillery Tank', venusaur: 'Area Control',
@@ -352,6 +375,7 @@ export default {
 
   // ─── Pokémon Taglines ───────────────────────────────────────
   taglines: {
+    yuna: "Spit to harass, blink in for a strike, then return to safety.",
     pikachu: 'Applies relentless pressure with swift basic attacks and electricity.',
     charizard: 'Scorches zones with flames and cuts off escape routes.',
     eevee: 'Balances homing missiles, power-ups, and daring charges.',
@@ -406,6 +430,7 @@ export default {
 
   // ─── Basic attack names ─────────────────────────────────────
   basics: {
+    yuna: "Paw Tap",
     pikachu: 'Thunder Shock', charizard: 'Flame Shot', eevee: 'Swift',
     mewtwo: 'Confusion', gengar: 'Shadow Ball', snorlax: 'Mega Punch',
     dragonite: 'Dragon Strike', blastoise: 'Water Gun', venusaur: 'Vine Whip',
