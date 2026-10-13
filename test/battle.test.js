@@ -125,7 +125,7 @@ function enemyWarningFor(move, key, difficulty) {
   if (['guard', 'boost'].includes(move.kind)) return 0.2;
   if (move.kind === 'field') return difficulty.fieldWindup;
   if (['storm', 'beam', 'nova'].includes(move.kind) || key === 'r') return difficulty.ultimateWindup;
-  if (['dash', 'slash', 'pulse'].includes(move.kind)) return difficulty.meleeWindup;
+  if (['dash', 'slash', 'pulse', 'blinkStrike'].includes(move.kind)) return difficulty.meleeWindup;
   return difficulty.reaction;
 }
 
@@ -162,16 +162,18 @@ function simulateThreat({ mode = 'idle', dodge = false, seconds = 20, difficulty
   return { battle, attacks, dodgeDelays };
 }
 
-test('roster exposes 50 popular Gen 1/2 Pokémon with independent, per-mon kits', () => {
-  assert.equal(ROSTER.length, 50);
-  assert.equal(new Set(ROSTER.map(mon => mon.id)).size, 50);
+test('roster exposes 50 Gen 1/2 Pokémon and Yuna with independent kits', () => {
+  assert.equal(ROSTER.length, 51);
+  assert.equal(ROSTER.filter(mon=>!mon.custom).length,50);
+  assert.equal(ROSTER_BY_ID.yuna.custom,true);
+  assert.equal(new Set(ROSTER.map(mon => mon.id)).size, 51);
   for (const id of ['pikachu','charizard','blastoise','venusaur','gengar','dragonite','mewtwo','typhlosion','feraligatr','ampharos','scizor','tyranitar']) assert.ok(ROSTER_BY_ID[id], id);
   assert.equal(ROSTER[0].id, 'pikachu');
   assert.deepEqual(
     Object.fromEntries([1, 2].map((gen) => [gen, ROSTER.filter((mon) => mon.gen === gen).length])),
     { 1: 30, 2: 20 },
   );
-  assert.equal(Object.keys(ROSTER_BY_ID).length, 50);
+  assert.equal(Object.keys(ROSTER_BY_ID).length, 51);
 
   const signatures = new Set();
   for (const mon of ROSTER) {
@@ -1102,7 +1104,7 @@ test('pause freezes countdown and all live combat timers, motion, regeneration, 
   assert.ok(battle.enemy.action.elapsed > before.enemy.action.elapsed);
 });
 
-test('all 50 enemy kits expose all five difficulty-specific warnings and gated action state, including defensive W', () => {
+test('all enemy kits expose all five difficulty-specific warnings and gated action state, including defensive W', () => {
   for (const difficultyName of DIFFICULTY_IDS) {
     const timing = DIFFICULTIES[difficultyName];
     for (const mon of ROSTER) {
@@ -1110,6 +1112,7 @@ test('all 50 enemy kits expose all five difficulty-specific warnings and gated a
         const battle = isolatedBattle({ enemyId: mon.id, difficulty: difficultyName });
         makeReady(battle, key, 'enemy');
         const move = battle.enemy.def.moves[key];
+        if(move.kind==='blinkStrike')putInLine(battle,move.range*.7);
         assert.equal(battle.castFor(battle.enemy, key, { ai: true }), true, `${difficultyName} ${mon.id}.${key}`);
         const action = battle.enemy.action;
         assert.ok(action, `${difficultyName} ${mon.id}.${key} has no action`);
@@ -1332,7 +1335,7 @@ test('lethal damage stops combat, clears transient state, and a rematch starts c
   }
 });
 
-test('all 2,500 player/enemy combinations survive a deterministic 32-second simulation without invalid state', () => {
+test('all roster player/enemy combinations survive a deterministic 32-second simulation without invalid state', () => {
   for (let playerIndex = 0; playerIndex < ROSTER.length; playerIndex++) {
     for (let enemyIndex = 0; enemyIndex < ROSTER.length; enemyIndex++) {
       const playerId = ROSTER[playerIndex].id;

@@ -1,5 +1,6 @@
 import {DurableObject} from 'cloudflare:workers';
 import {Match, ROOM_IDLE_MS} from './match.js';
+import {PROTOCOL} from '../src/net-state.js';
 
 const ACCOUNT_ROOM_LIMIT=5;
 const CODE_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -115,7 +116,7 @@ export default {
     const headers={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:allowed[0]||'', 'Vary':'Origin','Access-Control-Allow-Methods':'POST,GET,OPTIONS','Access-Control-Allow-Headers':'Content-Type'};
     if(origin&&!allowed.includes(origin))return json({error:'Origin not allowed'},403);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
-    if(url.pathname==='/health')return json({ok:true,protocol:1,service:'pokemon-arena',maxPlayers:10},200,headers);
+    if(url.pathname==='/health')return json({ok:true,protocol:PROTOCOL,service:'pokemon-arena',maxPlayers:10},200,headers);
     try{
       if(request.method==='POST'&&url.pathname==='/rooms'){
         const result=await env.DIRECTORY.getByName('rooms').reserve(request.headers.get('CF-Connecting-IP')||'local');

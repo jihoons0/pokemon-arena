@@ -1,6 +1,26 @@
 // src/i18n/ko.js — 한국어 번역 (Korean)
 // This is the source-of-truth locale from which others are derived.
 export default {
+  guestMoves: {
+    "yuna": {
+      "q": {
+        "name": "토하기",
+        "description": "상대를 향해 토사물을 뱉습니다. 적중하면 잠깐 둔화시킵니다."
+      },
+      "w": {
+        "name": "할퀴기",
+        "description": "가까운 상대를 할퀴어 피해를 주고 짧은 경직을 줍니다."
+      },
+      "e": {
+        "name": "전광석화",
+        "description": "사거리 {range} 안의 상대 옆으로 순간이동해 한 번 공격한 뒤 원래 자리로 돌아옵니다. 시전 시 조준한 위치를 벗어나면 피할 수 있습니다."
+      },
+      "r": {
+        "name": "파괴광선",
+        "description": "{charge}초 충전한 뒤 시전 시작 때 고정한 방향으로 사거리 {range}의 광선을 발사합니다."
+      }
+    }
+  },
   _meta: { code: 'ko', name: '한국어', dir: 'ltr' },
 
   // ─── Header / Chrome ────────────────────────────────────────
@@ -26,6 +46,7 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    guestCharacter: "게스트",
     title: '포켓몬 선택',
     speciesCount: ({n}) => `${n}종 출전 가능`,
     solo: '혼자 하기',
@@ -319,6 +340,7 @@ export default {
 
   // ─── Pokémon Names ──────────────────────────────────────────
   pokemon: {
+    yuna: "유나",
     pikachu: '피카츄', charizard: '리자몽', eevee: '이브이',
     mewtwo: '뮤츠', gengar: '팬텀', snorlax: '잠만보',
     dragonite: '망나뇽', blastoise: '거북왕', venusaur: '이상해꽃',
@@ -340,6 +362,7 @@ export default {
 
   // ─── Pokémon Roles ──────────────────────────────────────────
   roles: {
+    yuna: "기습형 샴고양이",
     pikachu: '원거리 캐리', charizard: '광역 마법사', eevee: '적응형 교전가',
     mewtwo: '초능력 캐리', gengar: '교란 마법사', snorlax: '수비형 탱커',
     dragonite: '돌진형 브루저', blastoise: '포격형 탱커', venusaur: '지역 장악',
@@ -361,6 +384,7 @@ export default {
 
   // ─── Pokémon Taglines ───────────────────────────────────────
   taglines: {
+    yuna: "토하기로 견제하고 전광석화로 기습한 뒤 원래 자리로 돌아옵니다.",
     pikachu: '빠른 평타와 전격으로 끊임없이 압박합니다.',
     charizard: '불꽃으로 공간을 태우고 도주 경로를 봉쇄합니다.',
     eevee: '유도탄과 강화, 과감한 돌진을 고르게 활용합니다.',
@@ -415,6 +439,7 @@ export default {
 
   // ─── Basic attack names ─────────────────────────────────────
   basics: {
+    yuna: "앞발 툭",
     pikachu: '전기쇼크', charizard: '불꽃탄', eevee: '스피드스타',
     mewtwo: '염동력', gengar: '섀도볼', snorlax: '메가톤펀치',
     dragonite: '용의일격', blastoise: '물대포', venusaur: '덩굴채찍',

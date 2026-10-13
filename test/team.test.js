@@ -798,12 +798,12 @@ test('D remains the single evasion action with its guard and tracking semantics 
   assert.equal(battle.cast('d'), false, 'switch reset the shared Dodge cooldown');
 });
 
-test('the expanded roster has exactly 50 real animation manifests and portraits', () => {
+test('every roster character has an animation manifest and portrait', () => {
   const root = join(process.cwd(), 'public', 'assets', 'pokemon');
   const files = walkFiles(root);
   const manifests = files.filter((file) => basename(file).toLowerCase() === 'animations.json');
-  assert.equal(ROSTER.length, 50);
-  assert.equal(manifests.length, 50);
+  assert.equal(ROSTER.length, 51);
+  assert.equal(manifests.length, ROSTER.length);
   const pokemonIds = new Set();
   for (const manifest of manifests) {
     assert.ok(statSync(manifest).size > 100, `${manifest} is empty`);

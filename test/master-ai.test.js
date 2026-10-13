@@ -103,7 +103,7 @@ test('Master saves scarce MP while a visible dodge is in progress, then attacks 
   b.masterAI.wasDodging=false;
   assert.equal(b.masterChooseMove(),'q');
 });
-test('all 50 Master kits remain finite and retain HP, D and R contracts',()=>{
+test('all Master kits remain finite and retain HP, D and R contracts',()=>{
   for(const mon of ROSTER){const b=live(mon.id);b.player.basicTimer=0;let casts=0;
     for(let frame=0;frame<120*36&&b.state==='playing';frame++){
       if(frame%240===0){b.input={x:0,y:1};b.cast('d');}if(frame%360===0)b.cast('q');

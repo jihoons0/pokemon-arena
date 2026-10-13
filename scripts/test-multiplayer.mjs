@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {setTimeout as delay} from 'node:timers/promises';
 import {WebSocket} from 'ws';
+import {PROTOCOL} from '../src/net-state.js';
 
 // Exercises the real Worker / Durable Object / WebSocket path, with no browser hooks.
 const endpoint=(process.argv[2]||'http://127.0.0.1:8787').replace(/\/$/,'');
@@ -16,7 +17,7 @@ async function peer(code,token){
   peers.push(p);
   p.ws=new WebSocket(endpoint.replace(/^http/,'ws')+'/rooms/'+code+'/socket');
   p.send=data=>{if(p.ws.readyState===WebSocket.OPEN)p.ws.send(JSON.stringify(data));};
-  p.ws.on('open',()=>p.send({type:'hello',v:1,team,special:'haste',token}));
+  p.ws.on('open',()=>p.send({type:'hello',v:PROTOCOL,team,special:'haste',token}));
   p.ws.on('message',raw=>{
     p.bytes+=raw.length;const m=JSON.parse(raw);
     if(m.type==='welcome')p.welcome=m;
@@ -39,7 +40,7 @@ async function peer(code,token){
 }
 
 async function smoke(){
-  const health=await fetch(endpoint+'/health').then(r=>r.json());assert.equal(health.maxPlayers,10);
+  const health=await fetch(endpoint+'/health').then(r=>r.json());assert.equal(health.maxPlayers,10);assert.equal(health.protocol,PROTOCOL);
   const response=await fetch(endpoint+'/rooms',{method:'POST'}),room=await response.json();assert.equal(response.status,201,room.error);
   const a=await peer(room.code),b=await peer(room.code);
   assert.equal(a.welcome.seat,0);assert.equal(b.welcome.seat,1);

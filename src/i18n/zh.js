@@ -1,5 +1,25 @@
 // src/i18n/zh.js — 简体中文翻译 (Chinese Simplified)
 export default {
+  guestMoves: {
+    "yuna": {
+      "q": {
+        "name": "呕吐",
+        "description": "向对手吐出呕吐物弹丸，命中后短暂减速。"
+      },
+      "w": {
+        "name": "抓击",
+        "description": "抓击附近的对手，造成伤害和短暂硬直。"
+      },
+      "e": {
+        "name": "电光一闪",
+        "description": "短暂消失，闪现到{range}范围内的目标位置旁攻击一次，然后返回起点。离开施放时瞄准的位置可躲避攻击。"
+      },
+      "r": {
+        "name": "破坏光线",
+        "description": "蓄力{charge}秒后，沿施放时锁定的方向发射射程为{range}的光线。"
+      }
+    }
+  },
   _meta: { code: 'zh', name: '中文', dir: 'ltr' },
 
   // ─── Header / Chrome ────────────────────────────────────────
@@ -25,6 +45,7 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    guestCharacter: "客串",
     title: '选择宝可梦',
     speciesCount: ({n}) => `${n}只 可出战`,
     solo: '单人对战',
@@ -315,6 +336,7 @@ export default {
 
   // ─── Pokémon Names ──────────────────────────────────────────
   pokemon: {
+    yuna: "尤娜",
     pikachu: '皮卡丘', charizard: '喷火龙', eevee: '伊布',
     mewtwo: '超梦', gengar: '耿鬼', snorlax: '卡比兽',
     dragonite: '快龙', blastoise: '水箭龟', venusaur: '妙蛙花',
@@ -336,6 +358,7 @@ export default {
 
   // ─── Pokémon Roles ──────────────────────────────────────────
   roles: {
+    yuna: "暹罗猫突袭者",
     pikachu: '远程核心', charizard: '范围法师', eevee: '适应型突击手',
     mewtwo: '超能核心', gengar: '干扰法师', snorlax: '防守型重坦',
     dragonite: '突进型重斗士', blastoise: '重炮型坦克', venusaur: '阵地掌控',
@@ -357,6 +380,7 @@ export default {
 
   // ─── Pokémon Taglines ───────────────────────────────────────
   taglines: {
+    yuna: "用呕吐物骚扰，闪现攻击后返回原位。",
     pikachu: '凭借迅捷的普攻和电击施加源源不断的攻势。',
     charizard: '用烈焰焚烧空间，彻底封锁对手逃生路径。',
     eevee: '均衡运用制导飞弹、自我强化与果敢突进。',
@@ -411,6 +435,7 @@ export default {
 
   // ─── Basic attack names ─────────────────────────────────────
   basics: {
+    yuna: "轻拍",
     pikachu: '电击', charizard: '火花弹', eevee: '高速星星',
     mewtwo: '念力', gengar: '暗影球', snorlax: '百万吨重拳',
     dragonite: '龙之打击', blastoise: '水枪', venusaur: '藤鞭',

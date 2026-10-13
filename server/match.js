@@ -23,7 +23,7 @@ export class Match {
     if(saved){
       Object.assign(this,saved);this.now=now;this.send=send;this.battle=saved.battle?restoreBattle(saved.battle):null;
       this.events=[];this.accumulator=0;
-      for(const p of this.players)if(p){if(p.connected)p.disconnectedAt=now();p.connected=false;}
+      for(const p of this.players)if(p){p.protocol??=1;if(p.connected)p.disconnectedAt=now();p.connected=false;}
       this.controls=[stats(),stats()];
     }
   }
@@ -34,18 +34,19 @@ export class Match {
   broadcast(message) { for(let seat=0;seat<2;seat++) if(this.players[seat]?.connected)this.send(seat,message); }
   lobby() { this.broadcast(this.publicLobby()); }
   connect({token,newToken,team,special,v}) {
-    if(v!==PROTOCOL)throw new Error('게임을 새로고침해 주세요.');
     if(this.now()>this.expiresAt || this.phase==='closed')throw new Error('만료된 방입니다. 새 방을 만들어 주세요.');
     let seat=token?this.players.findIndex(p=>p?.token===token):-1;
+    const legacyResume=v===1&&seat>=0&&['playing','loading'].includes(this.phase)&&this.players.every(p=>p&&p.team.every(id=>!ROSTER_BY_ID[id]?.custom));
+    if(v!==PROTOCOL&&!legacyResume)throw new Error('게임을 새로고침해 주세요.');
     if(token&&seat<0)throw new Error('재접속 정보가 만료됐습니다.');
     if(seat<0){
       if(this.phase!=='waiting')throw new Error('이미 전투 중인 방입니다.');
       seat=this.players.findIndex(p=>!p);
       if(seat<0)throw new Error('방이 가득 찼습니다.');
       if(!validParty(team)||!validSpecial(special))throw new Error('서로 다른 포켓몬 6마리를 선택해 주세요.');
-      this.players[seat]={token:newToken,team:[...team],special,connected:true,ready:false,loaded:false,disconnectedAt:0};
+      this.players[seat]={token:newToken,protocol:v,team:[...team],special,connected:true,ready:false,loaded:false,disconnectedAt:0};
     }else{
-      this.players[seat].connected=true;this.players[seat].disconnectedAt=0;
+      this.players[seat].connected=true;this.players[seat].disconnectedAt=0;this.players[seat].protocol=v;
       this.controls[seat]=stats();
     }
     return {seat,token:this.players[seat].token};
@@ -76,6 +77,10 @@ export class Match {
     }
     if(message.type==='unready'&&this.phase==='waiting'){p.ready=false;this.lobby();return;}
     if(message.type==='ready' && ['waiting','finished'].includes(this.phase)) {
+      // Existing battles can finish on v1, but both browsers must refresh before a new roster is loaded.
+      if(this.players.some(player=>player&&player.protocol!==PROTOCOL)){
+        this.send(seat,{type:'error',message:'새 캐릭터가 추가되었습니다. 두 플레이어 모두 게임을 새로고침해 주세요.'});return;
+      }
       if(this.phase==='finished'){
         this.phase='waiting';this.finishReason=null;this.battle=null;
         for(const player of this.players)if(player){player.ready=false;player.loaded=false;}
@@ -139,7 +144,7 @@ export class Match {
   pause(seat,kind,forced=[]) {
     if(this.phase!=='playing'||this.battle.state!=='playing'||this.pauseInfo)return false;
     const side=SIDES[seat];
-    if(kind==='switch'&&!forced.length&&(this.battle.switchCooldowns[side]>0||!this.battle.teams[side].some((f,i)=>f.hp>0&&i!==this.battle.activeIndices[side])))return false;
+    if(kind==='switch'&&!forced.length&&(this.battle.source(side).blinkStrike||this.battle.switchCooldowns[side]>0||!this.battle.teams[side].some((f,i)=>f.hp>0&&i!==this.battle.activeIndices[side])))return false;
     this.pauseInfo={kind,by:seat,forced,chosen:[],until:this.now()+(kind==='switch'?15000:60000)};
     this.battle.state='paused';this.battle.hitStop=0;this.accumulator=0;
     for(const c of this.controls)c.input=neutral();
