@@ -3,7 +3,7 @@
   "version": "4.3.0",
   "private": true,
   "type": "module",
-  "description": "Pokémon 6v6 action fan game with solo battles and authoritative room-code multiplayer",
+  "description": "Pok\u00e9mon 6v6 action fan game with solo battles and authoritative room-code multiplayer",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
@@ -15,10 +15,13 @@
     "deploy:multiplayer": "wrangler deploy"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "devDependencies": {
     "wrangler": "^4.149.0",
     "ws": "^8.22.0"
+  },
+  "dependencies": {
+    "@vercel/og": "1.0.1"
   }
 }

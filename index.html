@@ -5,8 +5,20 @@
 <link rel="icon" type="image/svg+xml" href="/assets/brand/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/brand/apple-touch-icon.png">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-KXL77JXDRN"></script>
+<!-- Google tag (gtag.js): production only; invitation details stay out of analytics. -->
+<script>
+  if (location.hostname === 'pokemon-arena-rosy.vercel.app') {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function(){dataLayer.push(arguments);};
+    gtag('js', new Date());
+    gtag('config', 'G-KXL77JXDRN', {
+      page_location: location.origin + (location.pathname.startsWith('/invite/') ? '/invite/' : location.pathname),
+      page_title: 'Pokémon Arena', page_referrer: document.referrer ? new URL(document.referrer).origin : ''
+    });
+    const tag = document.createElement('script'); tag.async = true;
+    tag.src = 'https://www.googletagmanager.com/gtag/js?id=G-KXL77JXDRN'; document.head.append(tag);
+  }
+</script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -14,7 +26,22 @@
 
   gtag('config', 'G-KXL77JXDRN');
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#194f56"><title>포켓몬 아레나</title><link rel="stylesheet" href="/src/style.css"></head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#194f56"><!-- share:start --><title>포켓몬 아레나</title>
+<meta name="description" content="포켓몬 6마리로 나만의 파티를 만들고, 혼자 또는 친구와 실시간 배틀을 즐기세요.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="포켓몬 아레나">
+<meta property="og:title" content="포켓몬 아레나">
+<meta property="og:description" content="포켓몬 6마리로 나만의 파티를 만들고, 혼자 또는 친구와 실시간 배틀을 즐기세요.">
+<meta property="og:url" content="https://pokemon-arena-rosy.vercel.app/">
+<meta property="og:image" content="https://pokemon-arena-rosy.vercel.app/assets/brand/social-card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="포켓몬 아레나">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="포켓몬 아레나">
+<meta name="twitter:description" content="포켓몬 6마리로 나만의 파티를 만들고, 혼자 또는 친구와 실시간 배틀을 즐기세요.">
+<meta name="twitter:image" content="https://pokemon-arena-rosy.vercel.app/assets/brand/social-card.png"><!-- share:end --><link rel="stylesheet" href="/src/style.css"></head>
 <body>
 <div class="app">
 <header class="site-header"><a class="brand" href="/" data-i18n-aria="ui.brandAria" aria-label="포켓몬 아레나 홈"><span class="pokeball" aria-hidden="true"></span><span data-i18n="ui.brand">포켓몬 아레나</span></a><nav class="toolbar" data-i18n-aria="ui.gameMenu" aria-label="게임 메뉴"><button id="music-toggle" aria-label="모든 소리 끄기"><svg class="sound-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m11 4-6 5H2v6h3l6 5V4Zm4 4c3 2 3 6 0 8m3-11c5 4 5 10 0 14" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span id="music-label" data-i18n="ui.soundOn">소리 켜짐</span></button><button id="help-button"><span data-i18n="ui.controls">조작법</span> <kbd>H</kbd></button><button id="fullscreen" data-i18n-aria="ui.fullscreen" aria-label="전체 화면" data-i18n="ui.fullscreen">전체 화면</button><div class="lang-picker" title="Language"><svg class="globe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20"/></svg><span id="header-lang-display" class="lang-display"><span class="lang-name">한국어</span><span class="lang-code">KO</span></span><span class="lang-chevron" aria-hidden="true">▾</span><select id="header-lang-select" aria-label="Language / 언어" data-i18n-aria="settings.language"><option value="ko">한국어</option><option value="en">English</option><option value="ja">日本語</option><option value="es">Español</option><option value="zh">中文</option></select></div><button id="credits-button" data-i18n="ui.settings">설정</button></nav></header>
@@ -29,7 +56,7 @@
 <section id="start-screen" class="selector" aria-labelledby="select-title">
 <header class="select-header"><h2 id="select-title" data-i18n="select.title">포켓몬 선택</h2><span class="selection-counter" hidden><b id="roster-total">50</b>종 출전 가능</span></header>
 <div class="play-modes" role="group" data-i18n-aria="select.title" aria-label="배틀 방식"><button id="mode-solo" aria-pressed="true" data-i18n="select.solo">혼자 하기</button><button id="mode-online" aria-pressed="false" data-i18n="select.online">친구와 대전</button></div>
-<section id="online-panel" class="online-panel" data-i18n-aria="select.online" aria-label="친구와 대전" hidden><div id="online-connect" class="online-connect"><button id="room-create" disabled data-i18n="select.createRoom">방 만들기</button><span class="online-or" data-i18n="select.or">또는</span><label class="sr-only" for="room-code-input" data-i18n="select.roomCodeLabel">방 코드 6자리</label><input id="room-code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" data-i18n-placeholder="select.roomCodePlaceholder" placeholder="방 코드 6자리"><button id="room-join" disabled data-i18n="select.join">참가</button></div><div id="online-room" class="online-room" hidden><span><span data-i18n="select.roomCode">방 코드</span> <strong id="room-code"></strong></span><button id="room-copy" data-i18n="select.copyInvite">초대 링크 복사</button><button id="room-leave" data-i18n="select.leave">나가기</button></div><p id="online-status" role="status" data-i18n="select.selectPartyPrompt">내 파티 6마리를 선택하세요.</p><div id="online-opponent" class="online-opponent"></div></section>
+<section id="online-panel" class="online-panel" data-i18n-aria="select.online" aria-label="친구와 대전" hidden><p id="online-invite" hidden></p><div id="online-connect" class="online-connect"><label class="online-identity" for="trainer-name-input"><span data-i18n="select.trainerName">트레이너 이름</span><input id="trainer-name-input" maxlength="40" autocomplete="nickname" spellcheck="false" required data-i18n-placeholder="select.trainerNamePlaceholder" placeholder="이름 또는 닉네임"></label><button id="room-create" disabled data-i18n="select.createRoom">방 만들기</button><span class="online-or" data-i18n="select.or">또는</span><label class="sr-only" for="room-code-input" data-i18n="select.roomCodeLabel">방 코드 6자리</label><input id="room-code-input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" data-i18n-placeholder="select.roomCodePlaceholder" placeholder="방 코드 6자리"><button id="room-join" disabled data-i18n="select.join">참가</button></div><div id="online-room" class="online-room" hidden><span><span data-i18n="select.roomCode">방 코드</span> <strong id="room-code"></strong></span><button id="room-copy" data-i18n="select.copyInvite">초대 링크 복사</button><button id="room-leave" data-i18n="select.leave">나가기</button></div><p id="online-status" role="status" data-i18n="select.selectPartyPrompt">내 파티 6마리를 선택하세요.</p><div id="online-opponent" class="online-opponent"></div></section>
 <div class="draft-controls"><div class="draft-tabs"><button id="select-player-side" class="active" aria-pressed="true"><span data-i18n="select.red">레드</span> <small data-i18n="select.myParty">내 파티</small> <b id="player-count" hidden>0 / 6</b></button><button id="select-enemy-side" aria-pressed="false" hidden><span data-i18n="select.gold">골드</span> <small data-i18n="select.enemyParty">상대 파티</small> <b id="enemy-count" hidden>0 / 6</b></button></div><div class="draft-shortcuts"><button id="load-recent" hidden data-i18n="select.loadRecent">최근 파티</button><button id="random-fill" data-i18n="select.randomFill">랜덤 채우기</button><button id="clear-party" data-i18n="select.clearParty">비우기</button></div></div>
 <div id="player-slots" class="team-slots" data-i18n-aria="select.mySlots" aria-label="내 파티 여섯 자리"></div><div id="enemy-slots" class="team-slots" data-i18n-aria="select.enemySlots" aria-label="상대 파티 여섯 자리" hidden></div>
 

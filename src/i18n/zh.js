@@ -45,6 +45,8 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    trainerName: "训练家名字",
+    trainerNamePlaceholder: "名字或昵称",
     guestCharacter: "客串",
     title: '选择宝可梦',
     speciesCount: ({n}) => `${n}只 可出战`,
@@ -211,6 +213,7 @@ export default {
 
   // ─── Online ─────────────────────────────────────────────────
   online: {
+    invitedBy: "{name}邀请你来对战！",
     connecting: '连接中…',
     connected: '已连接',
     reconnecting: '重连中…',

@@ -5,6 +5,8 @@ const root = resolve(import.meta.dirname);
 const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ogg':'audio/ogg','.xml':'application/xml','.md':'text/plain; charset=utf-8'};
 const server=http.createServer(async(req,res)=>{
   try {
+    if(req.url.startsWith('/invite/')||req.url.startsWith('/api/invite')){const {default:handler}=await import('./api/invite.js');return await handler(req,res);}
+    if(req.url.startsWith('/api/og')){const {default:handler}=await import('./api/og.js');return await handler(req,res);}
     let url=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
     if(url==='/')url='/index.html';
     const file=resolve(root, url.startsWith('/assets/') ? `public${url}` : `.${url}`);

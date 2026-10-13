@@ -45,6 +45,8 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    trainerName: "Nombre de entrenador",
+    trainerNamePlaceholder: "Tu nombre o apodo",
     guestCharacter: "INVITADA",
     title: 'Selección de Pokémon',
     speciesCount: ({n}) => `${n} especies disponibles`,
@@ -211,6 +213,7 @@ export default {
 
   // ─── Online ─────────────────────────────────────────────────
   online: {
+    invitedBy: "¡{name} te invita a combatir!",
     connecting: 'Conectando…',
     connected: 'Conectado',
     reconnecting: 'Reconectando…',

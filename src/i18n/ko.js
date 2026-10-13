@@ -46,6 +46,8 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    trainerName: "트레이너 이름",
+    trainerNamePlaceholder: "이름 또는 닉네임",
     guestCharacter: "게스트",
     title: '포켓몬 선택',
     speciesCount: ({n}) => `${n}종 출전 가능`,
@@ -215,6 +217,7 @@ export default {
 
   // ─── Online ─────────────────────────────────────────────────
   online: {
+    invitedBy: "{name}님이 배틀에 초대했어요!",
     connecting: '연결 중…',
     connected: '연결됨',
     reconnecting: '재접속 중…',

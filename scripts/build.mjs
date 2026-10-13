@@ -11,7 +11,7 @@ await Promise.all([
   cp(resolve(root, 'src'), resolve(output, 'src'), { recursive: true }),
   cp(resolve(root, 'public'), output, { recursive: true }),
 ]);
-await writeFile(resolve(output, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
+await writeFile(resolve(output, 'robots.txt'), 'User-agent: *\nAllow: /$\nAllow: /invite/\nAllow: /api/og\nAllow: /assets/brand/\nDisallow: /\n');
 const html = await readFile(resolve(output, 'index.html'), 'utf8');
 if (!html.includes('/src/app.js')) throw new Error('Build is missing the game entry point');
 console.log('Built static game in dist/ (source, sprites, music, and credits).');

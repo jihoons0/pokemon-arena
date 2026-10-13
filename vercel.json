@@ -7,10 +7,33 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
       ]
     }
-  ]
+  ],
+  "rewrites": [
+    {
+      "source": "/invite/:code",
+      "destination": "/api/invite?room=:code"
+    }
+  ],
+  "functions": {
+    "api/invite.js": {
+      "includeFiles": "index.html"
+    },
+    "api/og.js": {
+      "includeFiles": "{assets/share/**,public/assets/brand/logo-square.png,public/assets/pokemon/{pikachu,charizard,gengar}/portrait/Normal.png}"
+    }
+  }
 }

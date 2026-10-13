@@ -45,6 +45,8 @@ export default {
 
   // ─── Selection Screen ───────────────────────────────────────
   select: {
+    trainerName: "トレーナー名",
+    trainerNamePlaceholder: "名前またはニックネーム",
     guestCharacter: "ゲスト",
     title: 'ポケモン選択',
     speciesCount: ({n}) => `${n}匹 参戦可能`,
@@ -211,6 +213,7 @@ export default {
 
   // ─── Online ─────────────────────────────────────────────────
   online: {
+    invitedBy: "{name}さんからバトルへの招待！",
     connecting: '接続中…',
     connected: '接続完了',
     reconnecting: '再接続中…',

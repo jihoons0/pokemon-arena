@@ -1,4 +1,5 @@
 import {Battle} from '../src/battle.js';
+import {normalizeName} from '../src/invite.js';
 import {ROSTER_BY_ID} from '../src/roster.js';
 import {TRAINER_SKILLS} from '../src/trainer-skills.js';
 import {PROTOCOL, STEP, SIDES, encodeBattle, checkpointBattle, restoreBattle} from '../src/net-state.js';
@@ -29,11 +30,11 @@ export class Match {
   }
   publicLobby() {
     return {type:'lobby',v:PROTOCOL,phase:this.phase,game:this.game,expiresAt:this.expiresAt,
-      players:this.players.map(p=>p?{team:p.team,special:p.special,ready:p.ready,connected:p.connected,loaded:p.loaded}:null),reason:this.finishReason};
+      players:this.players.map(p=>p?{name:p.name||'',team:p.team,special:p.special,ready:p.ready,connected:p.connected,loaded:p.loaded}:null),reason:this.finishReason};
   }
   broadcast(message) { for(let seat=0;seat<2;seat++) if(this.players[seat]?.connected)this.send(seat,message); }
   lobby() { this.broadcast(this.publicLobby()); }
-  connect({token,newToken,team,special,v}) {
+  connect({token,newToken,team,special,v,name}) {
     if(this.now()>this.expiresAt || this.phase==='closed')throw new Error('만료된 방입니다. 새 방을 만들어 주세요.');
     let seat=token?this.players.findIndex(p=>p?.token===token):-1;
     const legacyResume=v===1&&seat>=0&&['playing','loading'].includes(this.phase)&&this.players.every(p=>p&&p.team.every(id=>!ROSTER_BY_ID[id]?.custom));
@@ -44,7 +45,7 @@ export class Match {
       seat=this.players.findIndex(p=>!p);
       if(seat<0)throw new Error('방이 가득 찼습니다.');
       if(!validParty(team)||!validSpecial(special))throw new Error('서로 다른 포켓몬 6마리를 선택해 주세요.');
-      this.players[seat]={token:newToken,protocol:v,team:[...team],special,connected:true,ready:false,loaded:false,disconnectedAt:0};
+      this.players[seat]={token:newToken,protocol:v,name:normalizeName(name),team:[...team],special,connected:true,ready:false,loaded:false,disconnectedAt:0};
     }else{
       this.players[seat].connected=true;this.players[seat].disconnectedAt=0;this.players[seat].protocol=v;
       this.controls[seat]=stats();

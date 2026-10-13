@@ -2,6 +2,7 @@ import {Battle} from './battle.js';
 import {PROTOCOL,applyBattleState,localEvent,predictMotion} from './net-state.js';
 import {MULTIPLAYER_URL} from './network-config.js';
 import {t} from './i18n/i18n.js';
+import {normalizeName} from './invite.js';
 
 const SESSION_KEY='mt-silver-online-v1';
 const now=()=>performance.now();
@@ -18,21 +19,21 @@ export class Multiplayer {
   get active(){return Boolean(this.session);}
   get endpoint(){return ['localhost','127.0.0.1'].includes(location.hostname)?'http://127.0.0.1:8787':MULTIPLAYER_URL;}
   status(text){this.handlers.status?.(text);}
-  async create(team,special){
+  async create(team,special,name){
     if(!this.endpoint)throw new Error(t('online.serverPreparing'));
     const response=await fetch(this.endpoint+'/rooms',{method:'POST',signal:AbortSignal.timeout(10000)});
     const body=await response.json();if(!response.ok)throw new Error(body.error||t('online.createFailed'));
-    await this.join(body.code,team,special);return body.code;
+    await this.join(body.code,team,special,null,name);return body.code;
   }
-  async join(code,team,special,resume=null){
+  async join(code,team,special,resume=null,name=''){
     code=code.trim().toUpperCase();if(!/^[A-HJ-NP-Z2-9]{6}$/.test(code))throw new Error(t('online.invalidCode'));
     if(!this.endpoint)throw new Error(t('online.serverPreparing'));
-    this.leave(false);this.session={code,team:[...team],special,token:resume};this.lastEvent=0;this.startedGame=-1;
+    this.leave(false);this.session={code,team:[...team],special,token:resume,name:normalizeName(name)};this.lastEvent=0;this.startedGame=-1;
     this.generation++;this.retries=0;this.fatal=false;this.status(t('online.connecting'));
     try{await this.open(this.generation);}catch(error){this.leave(false);throw error;}
   }
   savedSession(){try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');}catch{return null;}}
-  async restore(){const saved=this.savedSession();if(saved?.token)return this.join(saved.code,saved.team,saved.special,saved.token);}
+  async restore(){const saved=this.savedSession();if(saved?.token)return this.join(saved.code,saved.team,saved.special,saved.token,saved.name);}
   open(generation){
     return new Promise((resolve,reject)=>{
       const url=this.endpoint.replace(/^http/,'ws')+'/rooms/'+this.session.code+'/socket';
@@ -40,7 +41,7 @@ export class Multiplayer {
       const timeout=setTimeout(()=>{reject(new Error(t('online.serverTimeout')));socket.close();},10000);
       socket.addEventListener('open',()=>{
         if(generation!==this.generation){socket.close();return;}
-        this.send({type:'hello',v:PROTOCOL,team:this.session.team,special:this.session.special,token:this.session.token});
+        this.send({type:'hello',v:PROTOCOL,team:this.session.team,special:this.session.special,token:this.session.token,name:this.session.name});
       });
       socket.addEventListener('message',async event=>{
         if(generation!==this.generation)return;
