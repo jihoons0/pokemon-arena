@@ -6,6 +6,7 @@ import {controlKey,inputFromKeys} from './controls.js';
 import {bindBattleTouch,mergeMovement,canTrackStick} from './touch-controls.js';
 import {ROSTER,ROSTER_BY_ID,getMoves,DIFFICULTIES} from './roster.js';
 import {TRAINER_SKILLS,getTrainerSkill,resolveTrainerSkillChoice} from './trainer-skills.js';
+import {moveReadout} from './move-readout.js';
 import {loadSprites,drawFighter} from './sprites.js';
 import {Renderer} from './renderer.js';
 import {AudioManager} from './audio.js';
@@ -200,11 +201,12 @@ function createAbilities(){
   const moves=activeMoves();
   for(const key of ['q','w','e','r','s','d']){
     const move=moves[key];if(!move)continue;
-    const art=move.trainer?skillArt(move,key):iconFor(move,key);
+    const art=move.trainer?skillArt(move,key):iconFor(move,key),readout=moveReadout(move);
     const button=document.createElement('button');button.type='button';button.className='ability-button';button.id='ability-'+key;button.dataset.action=key;
-    button.setAttribute('aria-label',t('battle.abilityAria',{key:key.toUpperCase(),name:move.displayName}));
-    button.dataset.tooltip=t('battle.abilityTooltip',{name:move.displayName,desc:move.description||'',cd:move.cooldown,cost:move.cost||0});if(!mobileControls.matches)button.title=button.dataset.tooltip;
-    button.innerHTML='<kbd class="ability-key" data-control-key="'+key+'">'+key.toUpperCase()+'</kbd><span class="ability-art">'+art+'<span class="cooldown-shade" style="transform:scaleY(0)"></span><span class="cooldown-number"></span></span><span class="ability-name"><b>'+move.displayName+'</b></span><span class="ability-state"></span>';
+    button.setAttribute('aria-label',`${t('battle.abilityAria',{key:key.toUpperCase(),name:move.displayName})} · ${readout.label} ${readout.value} · ${readout.cost}`);
+    button.setAttribute('aria-describedby',button.id+'-state');
+    button.dataset.tooltip=`${readout.label} ${readout.value}\n`+t('battle.abilityTooltip',{name:move.displayName,desc:move.displayDescription||move.description||'',cd:move.cooldown,cost:move.cost||0});if(!mobileControls.matches)button.title=button.dataset.tooltip;
+    button.innerHTML='<kbd class="ability-key" data-control-key="'+key+'">'+key.toUpperCase()+'</kbd><span class="ability-art">'+art+'<span class="cooldown-shade" style="transform:scaleY(0)"></span><span class="cooldown-number"></span></span><span class="ability-name"><b>'+move.displayName+'</b></span><span class="ability-stats" aria-hidden="true"><span class="ability-power">'+readout.label+' <strong>'+readout.value+'</strong></span><span class="ability-cost">'+readout.cost+'</span></span><span class="ability-state" id="'+button.id+'-state"></span>';
     for(const event of ['mouseenter','focus'])button.addEventListener(event,()=>{if(renderer&&!mobileControls.matches)renderer.preview=key;});
     for(const event of ['mouseleave','blur'])button.addEventListener(event,()=>{if(renderer)renderer.preview=null;});
     $(key==='s'||key==='d'?'specials':'abilities').append(button);
@@ -305,4 +307,3 @@ $('room-leave').addEventListener('click',()=>{network.leave();$('online-connect'
 try{$('trainer-name-input').value=normalizeName(localStorage.getItem('mt-silver-trainer-name'));}catch{}
 $('trainer-name-input').addEventListener('input',()=>{try{localStorage.setItem('mt-silver-trainer-name',normalizeName($('trainer-name-input').value));}catch{}});
 init().then(async()=>{const invitation=inviteFromURL(location.href),invite=invitation?.code,savedRoom=network.savedSession();renderInvitation();if(invite||savedRoom){setPlayMode('online');if(invite)$('room-code-input').value=invite.toUpperCase();if(savedRoom?.token&&(!invite||invite.toUpperCase()===savedRoom.code)){selected.playerTeam=savedRoom.team;selected.playerSpecial=savedRoom.special;renderSlots();updateSkills('player');try{await ensureSprites(savedRoom.team);await network.restore();}catch(error){setNetworkStatus(error.message);}}}});
-

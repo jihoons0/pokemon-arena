@@ -91,6 +91,17 @@ summary{cursor:pointer;touch-action:manipulation}summary:focus-visible{outline:3
 .help-pokemon{display:flex;align-items:center;gap:9px;margin:0 0 10px;font-size:13px}.help-pokemon img{width:30px;height:30px;object-fit:contain;image-rendering:pixelated}
 
 
+/* Keep power/effect and MP cost visible, including during cooldowns. */
+.battle-console .ability-button{grid-template-rows:auto auto auto;min-height:110px}
+.ability-stats{grid-column:1/-1;grid-row:3;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;min-width:0;font-size:11px;line-height:1.35;font-weight:600;font-variant-numeric:tabular-nums;pointer-events:none}
+.ability-power{color:#38534b}.ability-power strong{font-weight:850}
+.ability-cost{padding:2px 6px;border-radius:5px;background:#dfebdc;color:#24544a;font-weight:800;white-space:nowrap}
+.battle-console .ability-button.no-energy{opacity:1}
+.battle-console .ability-button.no-energy .ability-cost{background:#f7dcd2;color:#8c3024}
+.ability-button.no-energy .ability-cost:after{content:' !'}
+.battle-console .ability-state{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.special-row .ability-button{grid-template-rows:auto auto;min-height:62px}
+.special-row .ability-stats{grid-column:2/-1;grid-row:2;font-size:10px;gap:3px 7px}
 /* Touch battle layout. Desktop and the scrollable character selector are unchanged. */
 .mobile-movement,#help-touch-movement{display:none}
 .pause-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
@@ -132,7 +143,7 @@ summary{cursor:pointer;touch-action:manipulation}summary:focus-visible{outline:3
 
   /* One grid, no duplicated abilities: left thumb movement, right thumb actions. */
   body.in-battle .battle-console{
-    --touch-gap:7px;--stick-size:clamp(136px,40vw,170px);--action-height:clamp(66px,9dvh,76px);--dodge-height:calc(var(--action-height) + 8px);
+    --touch-gap:7px;--stick-size:clamp(136px,40vw,170px);--action-height:clamp(90px,12dvh,102px);--dodge-height:calc(var(--action-height) + 8px);
     position:relative;z-index:3;flex:0 0 auto;display:grid;
     grid-template-columns:calc(50% - var(--touch-gap)) repeat(2,minmax(0,1fr));
     grid-template-rows:14px var(--action-height) var(--action-height) var(--dodge-height);
@@ -152,16 +163,18 @@ summary{cursor:pointer;touch-action:manipulation}summary:focus-visible{outline:3
   body.in-battle #ability-r{grid-area:3/3}
   body.in-battle #ability-s{grid-area:4/2;align-self:center;height:var(--action-height)}
   body.in-battle #ability-d{grid-area:4/3;height:var(--dodge-height);border-color:#5b7250;background:#f1dfa2;box-shadow:0 3px 0 #627452,inset 0 0 0 1px #fff8}
-  body.in-battle .battle-console .ability-button{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:26px auto;align-content:center;justify-items:center;gap:3px;width:100%;height:100%;min-height:0;padding:4px 3px;border:2px solid #739882;border-radius:12px;background:#fffdf1;box-shadow:0 3px 0 #789381;text-align:center;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-  body.in-battle .battle-console .ability-art{display:block;grid-area:1/1;align-self:center;justify-self:center;width:26px;height:26px;pointer-events:none}
-  body.in-battle .battle-console .ability-art svg{width:26px;height:26px}
+  body.in-battle .battle-console .ability-button{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:22px auto auto;align-content:center;justify-items:center;gap:3px;width:100%;height:100%;min-height:0;padding:4px 3px;border:2px solid #739882;border-radius:12px;background:#fffdf1;box-shadow:0 3px 0 #789381;text-align:center;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+  body.in-battle .battle-console .ability-art{display:block;grid-area:1/1;align-self:center;justify-self:center;width:22px;height:22px;pointer-events:none}
+  body.in-battle .battle-console .ability-art svg{width:22px;height:22px}
   body.in-battle .battle-console .ability-art img{-webkit-user-drag:none;pointer-events:none}
   body.in-battle .battle-console .ability-name{grid-area:2/1;min-width:0;max-width:100%;align-self:center;text-align:center;pointer-events:none}
   body.in-battle .battle-console .ability-name b{font-size:clamp(11px,3vw,12px);line-height:1.15;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}
   body.in-battle .battle-console .ability-state{font-size:8px;line-height:1;bottom:2px;font-weight:800;color:#8d352b;pointer-events:none}
-  body.in-battle .battle-console .ability-button.no-energy .ability-name{transform:translateY(-3px)}
+  body.in-battle .battle-console .ability-stats{grid-area:3/1;flex-direction:column;gap:2px;max-width:100%;font-size:10px;line-height:1.25}
+  body.in-battle .battle-console .ability-power{overflow-wrap:anywhere}
+  body.in-battle .battle-console .ability-cost{padding:1px 5px}
   body.in-battle .battle-console .ability-button.on-cooldown{background:#dce4d8;border-color:#8da593}
-  body.in-battle .battle-console .ability-button.no-energy{opacity:.72}
+  body.in-battle .battle-console .ability-button.no-energy{opacity:1}
   body.in-battle .battle-console .cooldown-number{font-size:16px;line-height:1;z-index:1}
   body.in-battle .battle-console .ability-button:hover:not(:disabled){transform:none}
   body.in-battle .battle-console .ability-button:active:not(:disabled),body.in-battle .battle-console .ability-button.touch-held{background:#c9e3c7;border-color:#245c60;box-shadow:inset 0 3px 6px #244d5833;transform:translateY(2px)}
@@ -213,7 +226,7 @@ summary{cursor:pointer;touch-action:manipulation}summary:focus-visible{outline:3
   body.in-battle .battle-hud{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));width:min(650px,calc(100% - 16px - env(safe-area-inset-left) - env(safe-area-inset-right)));margin:0 auto;grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr);gap:6px}
   body.in-battle .battle-center{position:static;left:auto;top:auto;transform:none;align-self:start;flex-direction:column;gap:3px;width:100%;margin-top:3px;padding:5px 3px}
   body.in-battle .battle-console{
-    --stick-size:clamp(136px,44dvh,170px);--action-height:clamp(56px,17dvh,68px);--skill-width:clamp(74px,11vw,94px);
+    --stick-size:clamp(136px,44dvh,170px);--action-height:clamp(70px,19dvh,80px);--skill-width:clamp(82px,12vw,104px);
     position:absolute;inset:0;width:100%;height:100%;
     grid-template-columns:var(--stick-size) minmax(0,1fr) repeat(2,var(--skill-width));
     grid-template-rows:minmax(0,1fr) 14px var(--action-height) var(--action-height) var(--dodge-height);
@@ -229,8 +242,10 @@ summary{cursor:pointer;touch-action:manipulation}summary:focus-visible{outline:3
   body.in-battle #ability-r{grid-area:4/4}
   body.in-battle #ability-s{grid-area:5/3}
   body.in-battle #ability-d{grid-area:5/4}
-  body.in-battle .battle-console .ability-button{background:#fffdf1f0;border-color:#608476;grid-template-rows:24px auto;gap:2px}
-  body.in-battle .battle-console .ability-art,body.in-battle .battle-console .ability-art svg{width:24px;height:24px}
+  body.in-battle .battle-console .ability-button{background:#fffdf1f0;border-color:#608476;grid-template-columns:18px minmax(0,1fr);grid-template-rows:auto auto;gap:3px}
+  body.in-battle .battle-console .ability-art,body.in-battle .battle-console .ability-art svg{width:18px;height:18px}
+  body.in-battle .battle-console .ability-name{grid-area:1/2}
+  body.in-battle .battle-console .ability-stats{grid-area:2/1/3/-1}
   body.in-battle .battle-console .ability-name b{font-size:11px}
   body.in-battle .mobile-movement{grid-column:1;grid-row:3/6}
   body.in-battle :is(#party-button,#pause-button){grid-column:1;grid-row:3/6;align-self:start}
