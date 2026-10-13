@@ -1,5 +1,6 @@
 // src/i18n/zh.js — 简体中文翻译 (Chinese Simplified)
 export default {
+  teams: {"switching": "{name}正在更换宝可梦", "victoryText": "你的队伍击败了所有对手宝可梦。", "defeatText": "我方所有宝可梦都倒下了。", "sendOut": "{name} · 去吧，{pokemon}！", "format": "对战模式", "a": "A队", "b": "B队", "everyoneReady": "全员准备后开始 · 空位可添加AI", "trainer": "训练家 {n}", "empty": "空位", "you": "我", "host": "房主", "reconnecting": "重新连接中", "ready": "已准备", "preparing": "准备中", "aiSlot": "{team}队 {n}号 AI难度", "waitForPlayer": "等待朋友 / 添加AI", "swap": "更换队伍", "swapName": "为{name}更换队伍", "ally": "队友", "changeTarget": "切换目标", "targetName": "选择{name}作为攻击目标", "spectating": "为队友加油"},
   guestMoves: {
     "yuna": {
       "q": {

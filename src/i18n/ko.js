@@ -1,6 +1,7 @@
 // src/i18n/ko.js — 한국어 번역 (Korean)
 // This is the source-of-truth locale from which others are derived.
 export default {
+  teams: {"switching": "{name} · 포켓몬 교체 중", "victoryText": "상대 팀의 포켓몬을 모두 쓰러뜨렸습니다.", "defeatText": "우리 팀의 포켓몬이 모두 쓰러졌습니다.", "sendOut": "{name} · 가랏 {pokemon}!", "format": "대전 방식", "a": "A팀", "b": "B팀", "everyoneReady": "전원 준비 완료 시 시작 · 빈 자리에 AI 추가 가능", "trainer": "트레이너 {n}", "empty": "빈 자리", "you": "나", "host": "방장", "reconnecting": "재접속 중", "ready": "준비 완료", "preparing": "준비 중", "aiSlot": "{team}팀 {n} AI 난이도", "waitForPlayer": "친구 기다리기 / AI 추가", "swap": "팀 바꾸기", "swapName": "{name} 팀 바꾸기", "ally": "아군", "changeTarget": "상대 전환", "targetName": "{name} 공격 대상으로 선택", "spectating": "아군 응원 중"},
   guestMoves: {
     "yuna": {
       "q": {

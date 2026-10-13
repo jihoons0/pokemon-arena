@@ -1,5 +1,5 @@
-import {Battle} from './battle.js';
-import {PROTOCOL,applyBattleState,localEvent,predictMotion} from './net-state.js';
+import {Battle,BATTLE_SIDES} from './battle.js';
+import {PROTOCOL,applyBattleState,localEvent,predictMotion,perspectiveSides} from './net-state.js';
 import {MULTIPLAYER_URL} from './network-config.js';
 import {t} from './i18n/i18n.js';
 import {normalizeName} from './invite.js';
@@ -17,23 +17,23 @@ export class Multiplayer {
     this.timer=setInterval(()=>this.pump(),50);
   }
   get active(){return Boolean(this.session);}
-  get endpoint(){return ['localhost','127.0.0.1'].includes(location.hostname)?'http://127.0.0.1:8787':MULTIPLAYER_URL;}
+  get endpoint(){const port=Number(new URLSearchParams(location.search).get('multiplayerPort'))||8787;return ['localhost','127.0.0.1'].includes(location.hostname)?'http://127.0.0.1:'+Math.max(1024,Math.min(65535,port)):MULTIPLAYER_URL;}
   status(text){this.handlers.status?.(text);}
-  async create(team,special,name){
+  async create(team,special,name,teamSize=1){
     if(!this.endpoint)throw new Error(t('online.serverPreparing'));
     const response=await fetch(this.endpoint+'/rooms',{method:'POST',signal:AbortSignal.timeout(10000)});
     const body=await response.json();if(!response.ok)throw new Error(body.error||t('online.createFailed'));
-    await this.join(body.code,team,special,null,name);return body.code;
+    await this.join(body.code,team,special,null,name,teamSize);return body.code;
   }
-  async join(code,team,special,resume=null,name=''){
+  async join(code,team,special,resume=null,name='',teamSize=1){
     code=code.trim().toUpperCase();if(!/^[A-HJ-NP-Z2-9]{6}$/.test(code))throw new Error(t('online.invalidCode'));
     if(!this.endpoint)throw new Error(t('online.serverPreparing'));
-    this.leave(false);this.session={code,team:[...team],special,token:resume,name:normalizeName(name)};this.lastEvent=0;this.startedGame=-1;
+    this.leave(false);this.session={code,team:[...team],special,token:resume,name:normalizeName(name),teamSize};this.lastEvent=0;this.startedGame=-1;
     this.generation++;this.retries=0;this.fatal=false;this.status(t('online.connecting'));
     try{await this.open(this.generation);}catch(error){this.leave(false);throw error;}
   }
   savedSession(){try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');}catch{return null;}}
-  async restore(){const saved=this.savedSession();if(saved?.token)return this.join(saved.code,saved.team,saved.special,saved.token,saved.name);}
+  async restore(){const saved=this.savedSession();if(saved?.token)return this.join(saved.code,saved.team,saved.special,saved.token,saved.name,saved.teamSize);}
   open(generation){
     return new Promise((resolve,reject)=>{
       const url=this.endpoint.replace(/^http/,'ws')+'/rooms/'+this.session.code+'/socket';
@@ -41,7 +41,7 @@ export class Multiplayer {
       const timeout=setTimeout(()=>{reject(new Error(t('online.serverTimeout')));socket.close();},10000);
       socket.addEventListener('open',()=>{
         if(generation!==this.generation){socket.close();return;}
-        this.send({type:'hello',v:PROTOCOL,team:this.session.team,special:this.session.special,token:this.session.token,name:this.session.name});
+        this.send({type:'hello',v:PROTOCOL,team:this.session.team,special:this.session.special,token:this.session.token,name:this.session.name,teamSize:this.session.teamSize});
       });
       socket.addEventListener('message',async event=>{
         if(generation!==this.generation)return;
@@ -51,6 +51,7 @@ export class Multiplayer {
           this.seq=0;this.commandId=0;this.commands=[];this.session.token=data.token;this.history=[];
           try{sessionStorage.setItem(SESSION_KEY,JSON.stringify(this.session));}catch{}
           this.send({type:'ping',at:now()});this.lastPing=now();this.status(t('online.connected'));resolve();
+        }else if(data.type==='seat'){this.seat=data.seat;
         }else if(data.type==='error'){
           this.status(data.message);this.handlers.error?.(data.message);
           if(data.fatal){this.fatal=true;clearTimeout(timeout);if(!welcomed)reject(new Error(data.message));this.handlers.fatal?.(data.message);socket.close();}
@@ -67,7 +68,7 @@ export class Multiplayer {
           if(this.assetsGame===data.game){this.acceptState(data);return;}
           this.pendingState=data;if(this.preparingState)return;this.preparingState=true;
           try{
-            await this.handlers.prepare?.({players:[{team:data.state.options.playerTeam},{team:data.state.options.enemyTeam}]});
+            await this.handlers.prepare?.({players:BATTLE_SIDES.slice(0,data.state.teams.length).map(side=>({team:data.state.options[side+'Team']}))});
             if(generation===this.generation){this.assetsGame=data.game;this.preparingState=false;this.acceptState(this.pendingState);}
           }catch{if(generation===this.generation){this.preparingState=false;this.status(t('online.loadingResources'));}}
         }
@@ -85,6 +86,8 @@ export class Multiplayer {
   }
   send(message){if(this.socket?.readyState===WebSocket.OPEN)this.socket.send(JSON.stringify(message));}
   ready(team,special){this.send({type:'ready',team,special});}
+  configure(message){this.send(message);}
+  target(side){const remote=perspectiveSides(this.seat,this.battle.sides.length)[BATTLE_SIDES.indexOf(side)];return this.queue({kind:'target',seat:BATTLE_SIDES.indexOf(remote)});}
   unready(){this.send({type:'unready'});}
   leave(notify=true){
     if(notify)this.send({type:'leave'});this.generation++;clearTimeout(this.retryTimer);this.socket?.close();
@@ -123,13 +126,13 @@ export class Multiplayer {
   resume(){return this.queue({kind:'resume'});}
   cancelSwitch(){return this.queue({kind:'cancelSwitch'});}
   acceptState(message){
-    const at=now(),side=this.seat===1?'enemy':'player',first=this.startedGame!==message.game;
+    const at=now(),side=this.seat,first=this.startedGame!==message.game;
     const previous={id:this.battle.player.id,x:this.battle.player.x,y:this.battle.player.y};
     this.lastStateAt=at;this.game=message.game;this.finishReason=message.reason;this.commands=this.commands.filter(c=>c.id>message.actionAck);
     this.pauseInfo=message.pause?{...message.pause,deadline:at+message.pause.remainingMs}:null;
     applyBattleState(this.battle,message.state,side);applyBattleState(this.prediction,message.state,side);
     this.prediction.tasks=[];this.prediction.drainEvents();
-    this.samples.push({at,enemy:copy(this.battle.enemy)});this.samples=this.samples.slice(-8);
+    this.samples.push({at,fighters:Object.fromEntries(this.battle.sides.slice(1).map(side=>[side,copy(this.battle.source(side))]))});this.samples=this.samples.slice(-8);
     const start=at-Math.min(150,this.ping/2);let cursor=start;
     // Replay only movement and unacknowledged actions after this snapshot's time.
     const timeline=[...this.history.filter(h=>h.at>=start).map(h=>({...h,kind:'motion'})),...this.commands.filter(c=>c.kind==='cast').map(c=>({...c,at:Math.max(start,c.at)}))].sort((a,b)=>a.at-b.at);
@@ -145,7 +148,7 @@ export class Multiplayer {
       if(event.type==='hint'&&event.command?.seat!==this.seat)continue;
       const key=message.game+':'+event.command?.id+':'+event.type;
       if(event.command?.seat===this.seat&&this.predictedEvents.has(key))continue;
-      this.battle.events.push(localEvent(event,side));
+      this.battle.events.push(localEvent(event,side,this.battle.sides.length));
     }
     if(['won','lost'].includes(this.battle.state)){
       this.phase='finished';
@@ -170,10 +173,12 @@ export class Multiplayer {
     }
     const time=at-60,samples=this.samples;
     const next=samples.find(s=>s.at>=time),before=samples.findLast(s=>s.at<=time)||samples[0];
-    if(next&&before&&next.enemy.id===before.enemy.id&&next.enemy.id===this.battle.enemy.id){
-      const mix=Math.max(0,Math.min(1,(time-before.at)/(next.at-before.at||1)));
-      for(const key of ['x','y','animTime'])this.battle.enemy[key]=before.enemy[key]+(next.enemy[key]-before.enemy[key])*mix;
-    }else if(this.battle.enemy&&this.battle.state!=='paused')this.battle.enemy.animTime+=dt;
+    for(const side of this.battle.sides.slice(1)){
+      const f=this.battle.source(side),a=before?.fighters[side],b=next?.fighters[side];
+      if(a&&b&&a.id===b.id&&a.id===f.id){const mix=Math.max(0,Math.min(1,(time-before.at)/(next.at-before.at||1)));for(const key of ['x','y','animTime'])f[key]=a[key]+(b[key]-a[key])*mix;}
+      else if(this.battle.state!=='paused')f.animTime+=dt;
+    }
+    this.battle.refreshTargets();
     // Extrapolate rendered projectiles between snapshots, never their collisions.
     if(this.battle.state==='playing'&&at-this.lastStateAt<100)for(const p of this.battle.projectiles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.age+=dt;}
     this.battle.lastStepDt=dt;

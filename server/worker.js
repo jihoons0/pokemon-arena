@@ -33,7 +33,7 @@ export class ArenaRoom extends DurableObject {
     super(ctx,env);this.ctx=ctx;this.env=env;this.sockets=new Map();this.buckets=new WeakMap();this.loop=null;this.lastPersist=0;this.lastBroadcast=0;this.lastRenew=0;
     ctx.blockConcurrencyWhile(async()=>{
       const saved=await ctx.storage.get('match');this.code=await ctx.storage.get('code');
-      this.match=new Match({saved,send:(seat,data)=>this.send(seat,data)});
+      this.match=new Match({saved,send:(seat,data)=>this.send(seat,data),onSwap:(a,b)=>this.swapSockets(a,b)});
       for(const ws of ctx.getWebSockets()){
         const attachment=ws.deserializeAttachment();
         if(attachment&&Number.isInteger(attachment.seat)&&this.match.players[attachment.seat]){
@@ -47,12 +47,17 @@ export class ArenaRoom extends DurableObject {
   async fetch(request){
     if(!this.code||this.match.phase==='closed'||Date.now()>this.match.expiresAt)return json({error:'방을 찾을 수 없거나 만료됐습니다.'},404);
     if(request.headers.get('Upgrade')?.toLowerCase()!=='websocket')return json({error:'WebSocket required'},426);
-    // Two players plus at most two sockets completing/replacing a reconnect.
-    if(this.ctx.getWebSockets().length>=4)return json({error:'방이 가득 찼습니다.'},429);
+    // Up to four players plus sockets completing a reconnect.
+    if(this.ctx.getWebSockets().length>=8)return json({error:'방이 가득 찼습니다.'},429);
     const pair=new WebSocketPair(),[client,server]=Object.values(pair);
     this.ctx.acceptWebSocket(server);server.serializeAttachment({pending:true,at:Date.now()});
     await this.ctx.storage.setAlarm(Math.min(this.match.expiresAt,Date.now()+10000));
     return new Response(null,{status:101,webSocket:client});
+  }
+  swapSockets(a,b){
+    const first=this.sockets.get(a),second=this.sockets.get(b);this.sockets.delete(a);this.sockets.delete(b);
+    if(first){this.sockets.set(b,first);first.serializeAttachment({seat:b});}
+    if(second){this.sockets.set(a,second);second.serializeAttachment({seat:a});}
   }
   send(seat,data){const ws=this.sockets.get(seat);if(ws)try{ws.send(JSON.stringify(data));}catch{this.onClose(ws);}}
   async webSocketMessage(ws,raw){
@@ -100,7 +105,7 @@ export class ArenaRoom extends DurableObject {
   async alarm(){
     for(const ws of this.ctx.getWebSockets()){const a=ws.deserializeAttachment();if(a?.pending&&Date.now()-a.at>10000)ws.close(1008,'Join timeout');}
     this.match.advance(0);
-    const abandoned=!this.sockets.size&&(this.match.players.some(Boolean)?this.match.players.every(p=>!p||!p.connected&&Date.now()-p.disconnectedAt>=30000):Date.now()-this.match.createdAt>=30000);
+    const abandoned=!this.sockets.size&&(this.match.players.some(Boolean)?this.match.players.every(p=>!p||p.bot||!p.connected&&Date.now()-p.disconnectedAt>=30000):Date.now()-this.match.createdAt>=30000);
     if(this.match.phase==='closed'||abandoned){
       this.stopLoop();this.match.phase='closed';for(const ws of this.ctx.getWebSockets())ws.close(1000,'Room expired');
       await this.env.DIRECTORY.getByName('rooms').release(this.code);await this.ctx.storage.deleteAll();return;
@@ -116,7 +121,7 @@ export default {
     const headers={'Access-Control-Allow-Origin':allowed.includes(origin)?origin:allowed[0]||'', 'Vary':'Origin','Access-Control-Allow-Methods':'POST,GET,OPTIONS','Access-Control-Allow-Headers':'Content-Type'};
     if(origin&&!allowed.includes(origin))return json({error:'Origin not allowed'},403);
     if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
-    if(url.pathname==='/health')return json({ok:true,protocol:PROTOCOL,service:'pokemon-arena',maxPlayers:10},200,headers);
+    if(url.pathname==='/health')return json({ok:true,protocol:PROTOCOL,service:'pokemon-arena',maxPlayersPerRoom:4,maxRooms:5},200,headers);
     try{
       if(request.method==='POST'&&url.pathname==='/rooms'){
         const result=await env.DIRECTORY.getByName('rooms').reserve(request.headers.get('CF-Connecting-IP')||'local');

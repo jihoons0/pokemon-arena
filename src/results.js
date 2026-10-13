@@ -21,3 +21,15 @@ export class VictoryConfetti {
     c.restore();if(this.elapsed>7)this.stop();
   }
 }
+
+// In a doubles match the celebration and MVP cover both allied trainers.
+export function teamResult(battle){
+  const sides=battle.sides.filter(side=>battle.isAllied('player',side)),stats={byPokemon:{}};
+  for(const side of sides)for(const [key,value]of Object.entries(battle.statsFor(side))){
+    if(typeof value==='number')stats[key]=(stats[key]||0)+value;
+    else if(key==='byPokemon')for(const [id,contribution]of Object.entries(value||{})){
+      const total=stats.byPokemon[id]||={damage:0,knockouts:0};total.damage+=contribution.damage||0;total.knockouts+=contribution.knockouts||0;
+    }
+  }
+  return {party:sides.flatMap(side=>battle.teams[side]),stats};
+}

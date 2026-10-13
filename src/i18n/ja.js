@@ -1,5 +1,6 @@
 // src/i18n/ja.js — 日本語翻訳 (Japanese)
 export default {
+  teams: {"switching": "{name}がポケモンを交代中", "victoryText": "相手チームのポケモンをすべて倒しました。", "defeatText": "味方チームのポケモンがすべて倒れました。", "sendOut": "{name} · いけ、{pokemon}！", "format": "対戦形式", "a": "チームA", "b": "チームB", "everyoneReady": "全員準備完了で開始 · 空き枠にAIを追加", "trainer": "トレーナー {n}", "empty": "空き枠", "you": "自分", "host": "ホスト", "reconnecting": "再接続中", "ready": "準備完了", "preparing": "準備中", "aiSlot": "チーム{team} 枠{n} AI難易度", "waitForPlayer": "友達を待つ / AI追加", "swap": "チーム変更", "swapName": "{name}のチームを変更", "ally": "味方", "changeTarget": "対象変更", "targetName": "{name}を攻撃対象にする", "spectating": "味方を応援中"},
   guestMoves: {
     "yuna": {
       "q": {

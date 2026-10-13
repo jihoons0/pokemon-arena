@@ -40,7 +40,7 @@ async function peer(code,token){
 }
 
 async function smoke(){
-  const health=await fetch(endpoint+'/health').then(r=>r.json());assert.equal(health.maxPlayers,10);assert.equal(health.protocol,PROTOCOL);
+  const health=await fetch(endpoint+'/health').then(r=>r.json());assert.equal(health.maxPlayersPerRoom,4);assert.equal(health.protocol,PROTOCOL);
   const response=await fetch(endpoint+'/rooms',{method:'POST'}),room=await response.json();assert.equal(response.status,201,room.error);
   const a=await peer(room.code),b=await peer(room.code);
   assert.equal(a.welcome.seat,0);assert.equal(b.welcome.seat,1);

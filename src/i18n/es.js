@@ -1,5 +1,6 @@
 // src/i18n/es.js — Traducción al español (Spanish)
 export default {
+  teams: {"switching": "{name} está cambiando de Pokémon", "victoryText": "Tu equipo derrotó a todos los Pokémon rivales.", "defeatText": "Todos los Pokémon de tu equipo se han debilitado.", "sendOut": "{name} · ¡Adelante, {pokemon}!", "format": "Formato", "a": "Equipo A", "b": "Equipo B", "everyoneReady": "Empieza cuando todos estén listos · Añade IA en espacios libres", "trainer": "Entrenador {n}", "empty": "Espacio libre", "you": "Tú", "host": "Anfitrión", "reconnecting": "Reconectando", "ready": "Listo", "preparing": "Eligiendo", "aiSlot": "Equipo {team}, puesto {n}: dificultad IA", "waitForPlayer": "Esperar amigo / Añadir IA", "swap": "Cambiar equipo", "swapName": "Cambiar de equipo a {name}", "ally": "Aliado", "changeTarget": "Cambiar objetivo", "targetName": "Atacar a {name}", "spectating": "Animando a tu aliado"},
   guestMoves: {
     "yuna": {
       "q": {

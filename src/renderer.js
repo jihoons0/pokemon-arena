@@ -10,7 +10,8 @@ import {cappedCount,drawCombatVfx,drawProjectileAura,elementVfxStyle,pushCapped,
 import {t,getLocale} from './i18n/i18n.js';
 
 const TAU=Math.PI*2,MAX_PARTICLES=900,MAX_EFFECTS=180,MAX_NUMBERS=80,MAX_GHOSTS=36;
-const TEAM_COLORS={player:'#ead06f',enemy:'#e18468'};
+const TEAM_COLORS={player:'#ead06f',enemy:'#e18468',ally:'#70d5f1',rival:'#dc94d4'};
+const fightersOf=b=>b.fighters||[b.player,b.enemy].filter(Boolean);
 const FALLBACK={color:'#d8e4ed',dark:'#70889b'};
 function circle(ctx,x,y,r){ctx.beginPath();ctx.arc(x,y,Math.max(0,r),0,TAU);}
 function rand(min,max){return min+Math.random()*(max-min);}
@@ -31,8 +32,8 @@ export class Renderer {
     this.framing=new BattleCamera();this.mobile=false;this.particleCap=MAX_PARTICLES;this.effectCap=MAX_EFFECTS;this.camera={x:0,y:0,vx:0,vy:0};this.recoils=new Map();this.feedback={impactCount:0,peakCameraImpulse:0,lastImpactPower:0};
     this.pokeballs=new PokeballPresentation();
   }
-  visualFighters(){return [this.battle.player,this.battle.enemy].filter(Boolean).map(f=>({...f,visualBounds:fighterVisualBounds(f,this.sprites)}));}
-  setTrainerPerspective(reverse=false){this.pokeballs.setPerspective(reverse);}
+  visualFighters(){return fightersOf(this.battle).filter(f=>f.hp>0||this.pokeballs.isRecalling(f.team)).map(f=>({...f,visualBounds:fighterVisualBounds(f,this.sprites)}));}
+  setTrainerPerspective(reverse=false,seat=reverse?1:0,count=2){this.pokeballs.setPerspective(reverse,seat,count);}
   setViewport(width,height,{mobile=false,insets={},dpr=1}={}){
     if(!(width>0&&height>0))return;
     const density=mobile?Math.min(2,Math.max(1,dpr),Math.sqrt(1500000/(width*height))):1;
@@ -99,7 +100,7 @@ export class Renderer {
     if(e.type==='basicrelease'){this.addEffect({type:'muzzle',x:e.x,y:e.y,angle:e.angle||0,color:e.color||teamColor,life:.18});this.directionalDust(e.x,e.y-12,(e.angle||0)+Math.PI,e.color||teamColor,5,65);}
     if(e.type==='cast'){
       const profile=this.profileForEvent(e),angle=Math.atan2((e.targetY??e.y)-e.y,(e.targetX??e.x)-e.x),damaging=!['guard','boost','haste','barrier','trainerHeal','cleanse','dodge'].includes(profile.kind);
-      this.addEffect({type:'castCorona',x:e.x,y:e.y,element:profile.element,angle,height:fighterHeight(this.battle[e.team],this.sprites),power:profile.power,r:profile.ultimate?72:43,ultimate:profile.ultimate,life:profile.anticipation});
+      this.addEffect({type:'castCorona',x:e.x,y:e.y,element:profile.element,angle,height:fighterHeight(this.battle.source?.(e.team)||this.battle[e.team],this.sprites),power:profile.power,r:profile.ultimate?72:43,ultimate:profile.ultimate,life:profile.anticipation});
       if(e.team==='player'||!e.team){const text=(getLocale()==='ko'?e.ko:e.name)||e.name||e.ko||(e.key?String(e.key).toUpperCase():'CAST');this.addEffect({type:'name',x:e.x,y:e.y-fighterHeight(this.battle.player,this.sprites),text,color:e.color||teamColor,life:.78});}
       this.addEffect({type:'skillSigil',x:e.x,y:e.y,element:profile.element,power:profile.power,ultimate:profile.ultimate,life:profile.ultimate?.8:.55});
       this.addEffect({type:'castAnticipation',x:e.x,y:e.y,angle,element,profileKind:profile.kind,family:profile.family,color:p.color,power:profile.power,life:profile.anticipation});
@@ -144,11 +145,11 @@ export class Renderer {
       const count=this.reducedMotion?10:25;for(let i=0;i<count&&this.particles.length<this.particleCap;i++){const life=rand(.4,1);this.particles.push({x:e.x+rand(-40,40),y:e.y+rand(-10,15),vx:rand(-15,15),vy:rand(-85,-30),life,maxLife:life,color,size:4,kind:'heal'});}
     }
     if(e.type==='shield'){this.addEffect({...e,type:'shield',color:e.color||'#bfe8fa',life:e.life??.75});this.addEffect({...e,type:'supportAura',element:'steel',life:.85});}
-    if(e.type==='enemyCast')this.addEffect({type:'name',x:e.x,y:e.y-fighterHeight(this.battle.enemy,this.sprites),text:e.displayName||(getLocale()==='ko'?e.ko:e.name)||e.name||e.ko||'ATTACK',color:e.color||TEAM_COLORS.enemy,life:1.05});
+    if(e.type==='enemyCast')this.addEffect({type:'name',x:e.x,y:e.y-fighterHeight(this.battle.source?.(e.team)||this.battle.enemy,this.sprites),text:e.displayName||(getLocale()==='ko'?e.ko:e.name)||e.name||e.ko||'ATTACK',color:e.color||TEAM_COLORS.enemy,life:1.05});
     if(e.type==='ultimate'){const profile=vfxProfile({kind:e.kind||'nova',element,ultimate:true});this.addEffect({...e,type:'ultimate',element,color:p.color,r:e.r||180,life:e.life??.85});this.addEffect({type:'ultimateFocus',x:e.x,y:e.y,angle:e.angle||0,element,family:profile.family,color:p.color,power:profile.power,r:94,life:.7});if(!this.reducedMotion)this.flash=Math.max(this.flash,.03);}
     if(e.type==='flame')this.burst(e.x,e.y-30,e.color||ELEMENTS.fire.color,18,120,'fire');
     if(e.type==='interrupted')this.addEffect({type:'name',x:e.x,y:e.y-90,text:t('battle.interrupted')||(getLocale()==='ko'?'공격 중단':'INTERRUPTED'),color:e.color||'#debeff',life:1});
-    if(e.type==='enrage'){const target=e.team==='player'?this.battle.player:this.battle.enemy;this.addEffect({type:'enrage',x:e.x??target?.x,y:e.y??target?.y,color:e.color||'#f08962',r:e.r||55,life:e.life??1.1});}
+    if(e.type==='enrage'){const target=this.battle.source?.(e.team)||this.battle.enemy;this.addEffect({type:'enrage',x:e.x??target?.x,y:e.y??target?.y,color:e.color||'#f08962',r:e.r||55,life:e.life??1.1});}
     if(e.type==='end'){
       const loser=e.team?([this.battle.player,this.battle.enemy].find(f=>teamOf(f,this.battle)!==e.team)):(e.won?this.battle.enemy:this.battle.player);
       if(loser)this.burst(loser.x,loser.y,'#f9ece0',42,170,'normal');
@@ -166,7 +167,7 @@ export class Renderer {
     this.particles=this.particles.filter(p=>p.life>0).slice(-this.particleCap);
     for(const list of [this.effects,this.numbers,this.ghosts])for(const item of list)item.life-=visualDt;
     this.effects=this.effects.filter(e=>e.life>0).slice(-this.effectCap);this.numbers=this.numbers.filter(e=>e.life>0).slice(-MAX_NUMBERS);this.ghosts=this.ghosts.filter(e=>e.life>0).slice(-MAX_GHOSTS);
-    for(const f of [this.battle.player,this.battle.enemy].filter(Boolean)){
+    for(const f of fightersOf(this.battle)){
       const key=`${teamOf(f,this.battle)}:${f.id}`;
       if(f.dash&&f.hp>0&&simDt>0){
         const dodge=f.dash.kind==='dodge',interval=dodge?.035:.055,elapsed=(this.ghostTimers.get(key)??interval)+simDt;
@@ -182,11 +183,11 @@ export class Renderer {
   draw(){
     const c=this.ctx,b=this.battle,t=this.time;if(!c||!b)return;const frame=this.framing.frame();c.save();c.clearRect(0,0,frame.width,frame.height);c.imageSmoothingEnabled=false;c.save();c.translate(frame.offsetX,frame.offsetY);c.scale(frame.scale,frame.scale);
     if(!this.reducedMotion)c.translate(Math.round(this.camera.x+rand(-this.shake,this.shake)),Math.round(this.camera.y+rand(-this.shake*.7,this.shake*.7)));
-    drawArena(c,t*1000,{preserveTransform:true,bounds:frame.world});drawTrainers(c,t,{activeTeams:[...this.pokeballs.transitions.keys()].map(team=>this.pokeballs.trainerSides[team]),reducedMotion:this.reducedMotion});this.drawGroundMarkers();
+    drawArena(c,t*1000,{preserveTransform:true,bounds:frame.world});drawTrainers(c,t,{teamSize:b.options.teamSize,activeTeams:[...this.pokeballs.transitions.keys()].map(team=>this.pokeballs.trainerSides[team]),reducedMotion:this.reducedMotion});this.drawGroundMarkers();
     for(const h of b.hazards||[])this.drawHazard(h);for(const w of b.windups||[])this.drawWindup(w);
     for(const e of this.effects)if(['ring','heal','pulse','fieldAttack','impact','detonate','ultimate','blinkLine','enrage','basicWindup','dodge','castAnticipation','releaseStroke','dashTrail','ultimateFocus','skillSigil','groundAfterglow'].includes(e.type))this.drawEffect(e);
     for(const ghost of this.ghosts)drawFighter(c,this.sprites,ghost,{alpha:ghost.life/ghost.maxLife*(ghost.ghostKind==='dodge'?.24:.18),ghost:true,worldScale:true});
-    for(const f of [b.player,b.enemy].filter(Boolean).sort((a,d)=>a.y-d.y)){
+    for(const f of fightersOf(b).sort((a,d)=>a.y-d.y)){
       const appearance=this.pokeballs.appearance(f);if(appearance.hidden)continue;
       const recoil=this.recoils.get(teamOf(f,b));c.save();if(recoil)c.translate(Math.round(recoil.x),Math.round(recoil.y));drawFighter(c,this.sprites,f,{worldScale:true,...appearance});this.drawFighterStatus(f);c.restore();
     }
@@ -197,7 +198,7 @@ export class Renderer {
     drawSnow(c,t*1000,{preserveTransform:true});
     for(const e of this.effects)if(e.type==='name')this.drawEffect(e);
     for(const n of this.numbers){const progress=1-n.life/n.maxLife;c.save();c.globalAlpha=Math.min(1,n.life*3);label(c,n.value,n.x,n.y-progress*38,n.color,n.critical?24:18);c.restore();}
-    const enemy=b.enemy;if(enemy?.hp>0&&enemy.action&&b.state==='playing'&&!(enemy.stun>0))this.drawEnemyAction(enemy,fighterHeight(enemy,this.sprites));
+    for(const enemy of fightersOf(b))if(enemy.hp>0&&enemy.action&&b.state==='playing'&&!(enemy.stun>0))this.drawEnemyAction(enemy,fighterHeight(enemy,this.sprites));
     c.restore();
     if(b.state==='countdown'){const text=b.options.mode==='pvp'?String(Math.max(1,Math.ceil(b.countdown))):b.countdown>1.5?'3':b.countdown>.7?'2':'1',a=frame.area,x=a.x+a.width/2,y=a.y+a.height/2,size=this.mobile?Math.min(frame.width/8,72):54;c.save();c.fillStyle='#182d4688';circle(c,x,y,size*.9);c.fill();label(c,text,x,y,'#fff4cd',size);c.restore();}
     if(this.flash>0&&!this.reducedMotion){c.fillStyle=`rgba(236,225,255,${Math.min(.22,this.flash*1.8)})`;c.fillRect(0,0,frame.width,frame.height);}c.restore();
@@ -211,6 +212,11 @@ export class Renderer {
     const dodgeInvul=!!f.dodgeGuard;if(dodgeInvul){const r=(f.radius||24)+9;c.save();c.strokeStyle='#b9f3ff';c.globalAlpha=.42+.12*Math.sin(this.time*28);c.lineWidth=1.5;c.beginPath();c.ellipse(f.x,f.y-8,r,r*.72,0,-.8,1.05);c.stroke();c.beginPath();c.ellipse(f.x,f.y-8,r+3,(r+3)*.72,0,Math.PI-.8,Math.PI+1.05);c.stroke();c.restore();}
     const enraged=f.enraged||f.enrage>0||(team==='enemy'&&b.enraged);if(enraged&&f.hp>0){c.save();c.strokeStyle=f.enrageColor||'#e38258';c.globalAlpha=.28+Math.sin(this.time*7)*.08;c.lineWidth=3;c.beginPath();c.ellipse(f.x,f.y+2,(f.radius||24)+17,((f.radius||24)+17)*.58,0,0,TAU);c.stroke();c.restore();}
     if(f.slow>0){c.save();c.strokeStyle='#9edcf3aa';c.setLineDash([3,6]);c.beginPath();c.ellipse(f.x,f.y+4,(f.radius||24)+10,8,0,0,TAU);c.stroke();c.restore();}
+    if(b.options.teamSize===2&&f.hp>0){
+      const name=b.options.controllers?.[team]?.name||f.def.displayName,selected=f===b.enemy;
+      c.save();const y=f.y-height-20;c.fillStyle='#102535df';c.fillRect(f.x-40,y-10,80,16);label(c,(team==='player'?'▼ ':selected?'◎ ':'')+name,f.x,y-2,color,10);
+      c.fillStyle='#273f4f';c.fillRect(f.x-30,y+8,60,4);c.fillStyle=color;c.fillRect(f.x-30,y+8,60*Math.max(0,f.hp/f.maxHp),4);c.restore();
+    }
     if(f.hp>0&&team==='player'){c.save();c.fillStyle=color;c.strokeStyle='#4f5960';c.lineWidth=1;c.beginPath();c.moveTo(f.x-5,f.y-height-12);c.lineTo(f.x+5,f.y-height-12);c.lineTo(f.x,f.y-height-6);c.closePath();c.fill();c.stroke();c.restore();}
   }
   drawEnemyAction(f,height){
@@ -222,7 +228,7 @@ export class Renderer {
   }
   drawGroundMarkers(){
     const c=this.ctx,b=this.battle;this.drawPreview();
-    for(const f of [b.player,b.enemy].filter(Boolean)){if(f.hp<=0)continue;const color=TEAM_COLORS[teamOf(f,b)]||'#b5c7d4';c.save();c.globalAlpha=.62;c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.ellipse(f.x,f.y+5,(f.radius||22)+8,((f.radius||22)+8)*.42,0,0,TAU);c.stroke();c.globalAlpha=.11;c.fillStyle=color;c.fill();c.restore();}
+    for(const f of fightersOf(b)){if(f.hp<=0)continue;const color=TEAM_COLORS[teamOf(f,b)]||'#b5c7d4';c.save();c.globalAlpha=.62;c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.ellipse(f.x,f.y+5,(f.radius||22)+8,((f.radius||22)+8)*.42,0,0,TAU);c.stroke();c.globalAlpha=.11;c.fillStyle=color;c.fill();c.restore();}
   }
   drawPreview(){
     const c=this.ctx,b=this.battle,key=this.preview,p=b.player;if(!key||!p||p.hp<=0||b.state!=='playing')return;
@@ -240,7 +246,7 @@ export class Renderer {
     c.restore();
   }
   drawHazard(h){
-    const legacyElement={thunder:'electric',eruption:'fire'}[h.type],element=elementOf(h.element,legacyElement||(h.type==='storm'?'electric':h.type==='field'?'fire':'normal')),c=this.ctx,p=palette(element,h.color),progress=h.delay>0?clamp(1-h.delay/Math.max(.001,h.initialDelay||h.delay)):1,active=h.delay<=0,warningColor=h.team==='enemy'?'#f0a15d':p.color;
+    const legacyElement={thunder:'electric',eruption:'fire'}[h.type],element=elementOf(h.element,legacyElement||(h.type==='storm'?'electric':h.type==='field'?'fire':'normal')),c=this.ctx,p=palette(element,h.color),progress=h.delay>0?clamp(1-h.delay/Math.max(.001,h.initialDelay||h.delay)):1,active=h.delay<=0,warningColor=['enemy','rival'].includes(h.team)?'#f0a15d':p.color;
     c.save();c.translate(h.x,h.y);c.scale(1,.7);c.globalAlpha=active?clamp((h.life??1)/(h.maxLife||1))*.58:.85;c.fillStyle=active?p.color:warningColor;c.strokeStyle=active?p.dark:warningColor;c.lineWidth=2;
     circle(c,0,0,h.r);c.globalAlpha*=active?.18:.12;c.fill();c.globalAlpha=active?.62:.85;c.setLineDash(active?[]:[7,6]);circle(c,0,0,h.r);c.stroke();c.setLineDash([]);
     if(!active){c.lineWidth=4;c.strokeStyle=warningColor;c.fillStyle=warningColor;c.beginPath();c.arc(0,0,h.r,-Math.PI/2,-Math.PI/2+TAU*progress);c.stroke();c.globalAlpha=.14+.18*progress;circle(c,0,0,h.r*progress);c.fill();}
@@ -258,7 +264,7 @@ export class Renderer {
     if(element==='rock'){c.fillStyle='#675d4f77';for(let i=0;i<6;i++){const a=i*TAU/6+.4,rr=r*.62;circle(c,Math.cos(a)*rr,Math.sin(a)*rr,5+i%3*3);c.fill();}}
   }
   drawWindup(w){
-    const c=this.ctx,element=elementOf(w.element),p=palette(element,w.color||TEAM_COLORS[w.team]),warningColor=w.team==='enemy'?'#f0a15d':p.color,progress=clamp(1-w.life/Math.max(.001,w.maxLife||w.life||1)),targetX=w.targetX??w.endX,targetY=w.targetY??w.endY,angle=Number.isFinite(w.angle)?w.angle:Math.atan2((targetY??w.y)-(w.y||0),(targetX??w.x)-(w.x||0)),length=w.length||Math.hypot((targetX??w.x)-w.x,(targetY??w.y)-w.y)||160;
+    const c=this.ctx,element=elementOf(w.element),p=palette(element,w.color||TEAM_COLORS[w.team]),warningColor=['enemy','rival'].includes(w.team)?'#f0a15d':p.color,progress=clamp(1-w.life/Math.max(.001,w.maxLife||w.life||1)),targetX=w.targetX??w.endX,targetY=w.targetY??w.endY,angle=Number.isFinite(w.angle)?w.angle:Math.atan2((targetY??w.y)-(w.y||0),(targetX??w.x)-(w.x||0)),length=w.length||Math.hypot((targetX??w.x)-w.x,(targetY??w.y)-w.y)||160;
     c.save();c.fillStyle=warningColor;c.strokeStyle=warningColor;c.globalAlpha=.12+progress*.16;c.lineWidth=2;c.setLineDash([8,6]);
     if(w.type==='aim'&&!w.melee){
       const endX=targetX??w.x+Math.cos(angle)*length,endY=targetY??w.y+Math.sin(angle)*length,near=8,far=15,dx=Math.sin(angle),dy=-Math.cos(angle);

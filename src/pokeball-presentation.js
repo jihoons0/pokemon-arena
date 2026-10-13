@@ -8,18 +8,21 @@ const circle=(c,x,y,r)=>{c.beginPath();c.arc(x,y,Math.max(.01,r),0,TAU);};
 // Cosmetic timeline only: never delays authoritative combat, switches or countdowns.
 export class PokeballPresentation{
   constructor(){this.transitions=new Map();this.setPerspective(false);}
-  setPerspective(reverse){this.trainerSides=reverse?{player:'enemy',enemy:'player'}:{player:'player',enemy:'enemy'};}
-  ballFor(team){return trainerBallPosition(this.trainerSides[team]||team);}
+  setPerspective(reverse,seat=reverse?1:0,count=2){
+    const sides=['player','enemy','ally','rival'],opponent=1-seat%2;this.teamSize=count/2;
+    this.trainerSides=count===4?Object.fromEntries([seat,opponent,(seat+2)%4,opponent+2].map((remote,i)=>[sides[i],sides[remote]])):reverse?{player:'enemy',enemy:'player'}:{player:'player',enemy:'enemy'};
+  }
+  ballFor(team){return trainerBallPosition(this.trainerSides[team]||team,this.teamSize);}
   reset(){this.transitions.clear();}
   event(e,battle){
     if(e.type==='reset'){this.reset();return;}
-    if(e.type==='start')for(const team of ['player','enemy']){const f=battle[team];if(f)this.transitions.set(team,{team,incoming:{...f},elapsed:0,releaseAt:0,duration:1.05});}
+    if(e.type==='start')for(const team of battle.sides||['player','enemy']){const f=battle.source?.(team)||battle[team];if(f)this.transitions.set(team,{team,incoming:{...f},elapsed:0,releaseAt:0,duration:1.05});}
     if(e.type==='faint'){
       const f=battle.teams?.[e.team]?.[e.index]||battle[e.team];
       if(f)this.transitions.set(e.team,{team:e.team,outgoing:{...f,x:e.x,y:e.y},elapsed:0,recallDuration:.85,duration:.85});
     }
     if(e.type==='switch'){
-      const f=battle[e.team],old=battle.teams?.[e.team]?.[e.fromIndex];if(!f)return;
+      const f=battle.source?.(e.team)||battle[e.team],old=battle.teams?.[e.team]?.[e.fromIndex];if(!f)return;
       const recall=!e.forced&&old?.hp>0;
       this.transitions.set(e.team,{team:e.team,incoming:{...f},outgoing:recall?{...old,x:e.x,y:e.y}:null,elapsed:0,recallDuration:recall?.18:0,releaseAt:recall?.18:0,duration:recall?.54:.4});
     }

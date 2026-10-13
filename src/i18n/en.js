@@ -1,5 +1,6 @@
 // src/i18n/en.js — English translations
 export default {
+  teams: {"switching": "{name} is switching Pokémon", "victoryText": "Your team defeated all opposing Pokémon.", "defeatText": "All Pokémon on your team have fainted.", "sendOut": "{name} · Go, {pokemon}!", "format": "Battle format", "a": "Team A", "b": "Team B", "everyoneReady": "Starts when everyone is ready · Add AI to empty slots", "trainer": "Trainer {n}", "empty": "Open slot", "you": "You", "host": "Host", "reconnecting": "Reconnecting", "ready": "Ready", "preparing": "Choosing", "aiSlot": "Team {team} slot {n} AI difficulty", "waitForPlayer": "Wait for friend / Add AI", "swap": "Switch teams", "swapName": "Switch {name} to the other team", "ally": "Ally", "changeTarget": "Switch target", "targetName": "Target {name}", "spectating": "Cheering for your ally"},
   guestMoves: {
     "yuna": {
       "q": {
