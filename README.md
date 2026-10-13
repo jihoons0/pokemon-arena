@@ -55,7 +55,10 @@ node scripts/test-multiplayer.mjs http://127.0.0.1:8787 --load
 - `npm run build`: 외부 빌드 의존성 없이 `dist/`에 게임을 생성합니다. `public/assets`는 배포 시 `/assets`에서 제공됩니다.
 - `npm run preview`: 완성된 정적 빌드를 **http://localhost:5174** 에서 확인합니다.
 - Vercel: Framework **Other**, Build Command **npm run build**, Output Directory **dist**. `vercel.json`에 설정되어 있으며 별도 서버/환경 변수는 필요하지 않습니다.
-- GitHub 저장소는 private로 유지합니다. `dist`, `node_modules`, `.vercel`, 환경 변수 파일과 개인 키는 Git에서 제외합니다.
+- 자동 배포는 기존 **Vercel Git 연동**이 `main` push 시 처리합니다. 중복 배포를 만들지 않도록 유지합니다.
+- `.github/workflows/deploy-vercel.yml`은 PR과 `main`에서 전체 테스트·정적 빌드·Worker 번들을 검증합니다. 기본 실행에는 배포 secret이 필요하지 않습니다.
+- Actions의 수동 배포는 `main`에서 `deploy`를 명시적으로 켠 경우에만 실행됩니다. 이 대체 경로에는 `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secrets가 필요합니다. `.vercel/project.json`이나 토큰을 커밋하지 않습니다.
+- GitHub 저장소는 공개입니다. `dist`, `node_modules`, `.vercel`, 환경 변수 파일과 개인 키는 Git에서 제외합니다.
 - 배포 결과에는 게임의 브라우저 코드와 에셋만 포함합니다. 저장소 관리 파일·테스트·서버·인증 정보는 포함하지 않습니다.
 - 검색 노출을 줄이기 위해 `robots.txt`와 `X-Robots-Tag: noindex, nofollow`를 제공합니다. **검색 차단이나 private GitHub 저장소는 배포 URL의 접근 제어가 아닙니다.** 비공개 접속이 필요하면 Vercel 배포 보호를 별도로 설정해야 합니다.
 
